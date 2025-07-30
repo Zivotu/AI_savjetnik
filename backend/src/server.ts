@@ -3,6 +3,7 @@ import agentRouter from './routes/agent';
 // Import the ElevenLabs TTS proxy router
 import ttsRouter from './routes/tts';
 import chatRouter from './routes/chat';
+import transcriptsRouter from './routes/transcripts';
 
 const app = express();
 
@@ -12,5 +13,6 @@ app.use('/api/agent', agentRouter);
 // Mount the TTS proxy under /api/tts
 app.use('/api/tts', ttsRouter);
 app.use('/api/chat', chatRouter);
+app.use('/api/transcripts', transcriptsRouter);
 
 export default app;
