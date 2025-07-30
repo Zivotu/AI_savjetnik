@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Play, MessageCircle, VolumeX } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { startSttStream } from "@/utils/voice";
 
 interface AgentPanelProps {
   language: "hr" | "en";
@@ -18,6 +20,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   });
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+
+  const [phase, setPhase] = useState<"idle" | "intro" | "collect" | "closing" | "ended">("idle");
+  const timer = useRef<NodeJS.Timeout>();
+  const startAt = useRef(0);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -85,6 +91,48 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
+
+  async function startVoice() {
+    setPhase("collect");
+    startAt.current = Date.now();
+
+    const stopStt = startSttStream(
+      import.meta.env.VITE_ELEVENLABS_API_KEY,
+      async (userText) => {
+        await fetch("/api/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversationId, role: "user", text: userText, mode: "voice" })
+        });
+
+        const ttsRes = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: userText, voiceId: import.meta.env.VITE_ELEVENLABS_VOICE_ID })
+        });
+        const audioBlob = await ttsRes.blob();
+        const url = URL.createObjectURL(audioBlob);
+        new Audio(url).play();
+
+        setMessages(prev => [
+          ...prev,
+          { type: "user" as const, text: userText, time: new Date().toLocaleTimeString() },
+          { type: "agent" as const, text: userText, time: new Date().toLocaleTimeString() }
+        ]);
+      }
+    );
+
+    timer.current = setTimeout(() => {
+      stopStt();
+      setPhase("closing");
+    }, 175000);
+  }
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -146,14 +194,15 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-            <button
+            <Button
               className="flex items-center justify-center space-x-2 bg-gradient-primary text-white px-6 py-3 rounded-xl font-medium shadow-medium hover:shadow-strong transition-smooth hover:scale-105"
               data-evt="agent_start_call"
-              disabled
+              disabled={phase !== "idle"}
+              onClick={startVoice}
             >
               <Play className="w-4 h-4" />
               <span>{currentTexts.startCall}</span>
-            </button>
+            </Button>
             <button
               className="flex items-center justify-center space-x-2 bg-white/50 text-foreground px-4 py-3 rounded-xl font-medium border border-white/30 hover:bg-white/70 transition-smooth"
               data-evt="agent_switch_chat"
@@ -176,6 +225,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               <VolumeX className="w-4 h-4" />
             </button>
           </div>
+          {phase === "collect" && (
+            <p className="text-xs text-muted">🎙️ Snimamo…</p>
+          )}
 
           <div className="flex-1 bg-white/30 rounded-2xl p-4 overflow-y-auto">
             <div className="space-y-3">
