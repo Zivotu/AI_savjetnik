@@ -1,5 +1,5 @@
 require("dotenv").config();
-import express from 'express';
+import express, { type Request, type Response, type NextFunction } from 'express';
 import agentRouter from './routes/agent';
 // Import the ElevenLabs TTS proxy router
 import ttsRouter from './routes/tts';
@@ -10,6 +10,11 @@ import solutionRouter from './routes/solution';
 const app = express();
 
 app.use(express.json());
+// Logging middleware for debugging purposes
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  console.log(req.method, req.originalUrl, req.body);
+  next();
+});
 
 app.use('/api/agent', agentRouter);
 // Mount the TTS proxy under /api/tts
