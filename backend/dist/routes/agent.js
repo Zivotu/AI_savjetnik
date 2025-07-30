@@ -1,0 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const storage_1 = require("../utils/storage");
+const router = (0, express_1.Router)();
+router.post('/', async (req, res) => {
+    const { conversationId, role, text, phase, mode } = req.body;
+    await (0, storage_1.appendTurn)(conversationId, { role, text, phase, mode });
+    if (phase === 'ended') {
+        await (0, storage_1.updateConversation)(conversationId, {
+            finished: true,
+            finishedAt: new Date().toISOString(),
+        });
+    }
+    res.status(200).json({ ok: true });
+});
+exports.default = router;

@@ -1,0 +1,39 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+// Router for ElevenLabs text-to-speech proxy
+const router = (0, express_1.Router)();
+router.post('/', async (req, res) => {
+    const { text, voiceId = process.env.ELEVENLABS_VOICE_ID, modelId = 'eleven_multilingual_v2' } = req.body;
+    if (!text) {
+        res.status(400).json({ error: 'Missing text' });
+        return;
+    }
+    try {
+        const apiRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+            method: 'POST',
+            headers: {
+                'xi-api-key': process.env.ELEVENLABS_API_KEY ?? '',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text,
+                model_id: modelId,
+                voice_settings: { similarity_boost: 0.5, stability: 0.35 },
+            }),
+        });
+        if (!apiRes.ok) {
+            const data = await apiRes.json().catch(() => ({}));
+            res.status(apiRes.status).json({ error: data.error || data.message });
+            return;
+        }
+        // Propagate status and headers then pipe stream to client
+        res.status(apiRes.status);
+        res.setHeader('Content-Type', apiRes.headers.get('Content-Type') || 'audio/mpeg');
+        apiRes.body?.pipe(res);
+    }
+    catch (err) {
+        res.status(500).json({ error: 'TTS request failed' });
+    }
+});
+exports.default = router;
