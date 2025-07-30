@@ -3,6 +3,7 @@ import { Play, MessageCircle, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { startSttStream } from "@/utils/voice";
 import GdprModal from "./GdprModal";
+import ContactConfirm from "./ContactConfirm";
 
 interface AgentPanelProps {
   language: "hr" | "en";
@@ -23,6 +24,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const [consentGiven, setConsentGiven] = useState(() => localStorage.getItem("consent") === "yes");
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactSubmitted, setContactSubmitted] = useState(() => localStorage.getItem("contactDone") === "yes");
 
   const [phase, setPhase] = useState<"idle" | "intro" | "collect" | "closing" | "ended">("idle");
   const timer = useRef<NodeJS.Timeout>();
@@ -100,6 +103,12 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (phase === "closing" && !contactSubmitted) {
+      setContactOpen(true);
+    }
+  }, [phase, contactSubmitted]);
+
   async function startVoice() {
     if (!consentGiven) {
       setGdprOpen(true);
@@ -159,6 +168,21 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
     // sada pokreni voice
     startVoice();
+  }
+
+  async function handleSaveContact(email: string, phone: string) {
+    await fetch("/api/agent", {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({
+        conversationId,
+        role: "user",
+        text: `CONTACT::${email}|${phone}`
+      })
+    });
+    localStorage.setItem("contactDone","yes");
+    setContactSubmitted(true);
+    setContactOpen(false);
   }
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -319,8 +343,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               ></div>
             </div>
           </div>
-        </div>
       </div>
+      </div>
+
+      {contactSubmitted && (
+        <button className="text-xs underline text-muted" onClick={() => setContactOpen(true)}>
+          Uredi kontakt
+        </button>
+      )}
 
       <div className="text-xs text-muted-foreground mt-6 text-center">
         <p className="mb-1">{currentTexts.privacy}</p>
@@ -333,6 +363,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         open={gdprOpen}
         onAccept={handleConsent}
         onClose={() => setGdprOpen(false)}
+      />
+      <ContactConfirm
+        open={contactOpen}
+        onSave={handleSaveContact}
+        onClose={() => setContactOpen(false)}
       />
     </div>
   );
