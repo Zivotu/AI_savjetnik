@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Play, MessageCircle, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { startSttStream } from "@/utils/voice";
+import GdprModal from "./GdprModal";
 
 interface AgentPanelProps {
   language: "hr" | "en";
@@ -18,6 +19,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     localStorage.setItem("convId", id);
     return id;
   });
+  const [gdprOpen, setGdprOpen] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(() => localStorage.getItem("consent") === "yes");
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -98,6 +101,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   }, []);
 
   async function startVoice() {
+    if (!consentGiven) {
+      setGdprOpen(true);
+      return;
+    }
+
     setPhase("collect");
     startAt.current = Date.now();
 
@@ -131,6 +139,26 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       stopStt();
       setPhase("closing");
     }, 175000);
+  }
+
+  async function handleConsent() {
+    setConsentGiven(true);
+    localStorage.setItem("consent", "yes");
+    setGdprOpen(false);
+
+    // logiraj backend
+    await fetch("/api/agent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        conversationId,
+        role: "system",
+        text: "CONSENT_GIVEN"
+      })
+    });
+
+    // sada pokreni voice
+    startVoice();
   }
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -198,7 +226,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               className="flex items-center justify-center space-x-2 bg-gradient-primary text-white px-6 py-3 rounded-xl font-medium shadow-medium hover:shadow-strong transition-smooth hover:scale-105"
               data-evt="agent_start_call"
               disabled={phase !== "idle"}
-              onClick={startVoice}
+              onClick={() => (consentGiven ? startVoice() : setGdprOpen(true))}
             >
               <Play className="w-4 h-4" />
               <span>{currentTexts.startCall}</span>
@@ -300,6 +328,12 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           {currentTexts.learnMore}
         </button>
       </div>
+
+      <GdprModal
+        open={gdprOpen}
+        onAccept={handleConsent}
+        onClose={() => setGdprOpen(false)}
+      />
     </div>
   );
 };
