@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { appendTurn } from "../utils/storage";
 
 const router = Router();
@@ -6,7 +6,7 @@ const router = Router();
 /**
  * Proxy to ElevenLabs Conversation text endpoint.
  */
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   const { conversationId, text } = req.body as {
     conversationId: string;
     text: string;

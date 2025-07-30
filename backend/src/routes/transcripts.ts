@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -6,13 +6,13 @@ const router = Router();
 const DIR = path.resolve(__dirname, "../../transcripts");
 const PASS = process.env.ADMIN_PASS;
 
-router.use((req, res, next) => {
+router.use((req: Request, res: Response, next: NextFunction) => {
   if (req.headers["x-admin-pass"] !== PASS) return res.sendStatus(401);
   next();
 });
 
 // GET /api/transcripts  → list
-router.get("/", async (_req, res) => {
+router.get("/", async (_req: Request, res: Response) => {
   const files = await fs.readdir(DIR);
   const data = await Promise.all(
     files.map(async f => {
@@ -30,7 +30,7 @@ router.get("/", async (_req, res) => {
 });
 
 // GET /api/transcripts/:id  → full JSON
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req: Request, res: Response) => {
   const p = path.join(DIR, `${req.params.id}.json`);
   try {
     const json = JSON.parse(await fs.readFile(p, "utf8"));
@@ -41,7 +41,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // DELETE /api/transcripts/:id
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   const p = path.join(DIR, `${req.params.id}.json`);
   try {
     await fs.unlink(p);
