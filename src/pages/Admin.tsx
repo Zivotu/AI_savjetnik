@@ -53,7 +53,7 @@ export default function Admin() {
               <Td>{new Date(r.created).toLocaleString()}</Td>
               <Td>{r.turns}</Td>
               <Td>{r.hasContact ? "✔️" : ""}</Td>
-              <Td><Button size="xs" variant="ghost" onClick={(e)=>{e.stopPropagation();handleDelete(r.id);}}>🗑️</Button></Td>
+              <Td><Button size="sm" variant="ghost" onClick={(e)=>{e.stopPropagation();handleDelete(r.id);}}>🗑️</Button></Td>
             </Tr>
           ))}
         </Tbody>

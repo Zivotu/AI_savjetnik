@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { appendTurn, updateConversation } from '../utils/storage';
 
 const router = Router();
 
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   const { conversationId, role, text, phase, mode } = req.body as {
     conversationId: string;
     role: 'user' | 'assistant' | 'tool';

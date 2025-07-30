@@ -4,6 +4,7 @@ import agentRouter from './routes/agent';
 import ttsRouter from './routes/tts';
 import chatRouter from './routes/chat';
 import transcriptsRouter from './routes/transcripts';
+import solutionRouter from './routes/solution';
 
 const app = express();
 
@@ -14,5 +15,6 @@ app.use('/api/agent', agentRouter);
 app.use('/api/tts', ttsRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/transcripts', transcriptsRouter);
+app.use('/api/solution', solutionRouter);
 
 export default app;

@@ -1,9 +1,9 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 
 // Router for ElevenLabs text-to-speech proxy
 const router = Router();
 
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   const { text, voiceId = process.env.ELEVENLABS_VOICE_ID, modelId = 'eleven_multilingual_v2' } = req.body as {
     text?: string;
     voiceId?: string;
@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
     // Propagate status and headers then pipe stream to client
     res.status(apiRes.status);
     res.setHeader('Content-Type', apiRes.headers.get('Content-Type') || 'audio/mpeg');
-    apiRes.body?.pipe(res);
+    (apiRes.body as any)?.pipe(res as any);
   } catch (err) {
     res.status(500).json({ error: 'TTS request failed' });
   }
