@@ -1,9 +1,83 @@
 import { useState, useEffect, useRef } from "react";
 import { Play, MessageCircle, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { startSttStream } from "@/utils/voice";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
+
+type STTCallback = (text: string) => void | Promise<void>;
+
+function startSttStream(apiKey: string, onText: STTCallback) {
+  const ws = new WebSocket(
+    "wss://api.elevenlabs.io/v1/speech-to-text/ws",
+    ["xi-api-key", apiKey]
+  );
+
+  let recorder: MediaRecorder | null = null;
+
+  const stop = () => {
+    recorder?.stop();
+    ws.close();
+  };
+
+  ws.onopen = () => {
+    console.log("STT WS opened");
+    ws.send(
+      JSON.stringify({
+        type: "connect_request",
+        sample_rate: 16000,
+        encoding: "pcm_s16le",
+        format: "wav"
+      })
+    );
+  };
+
+  ws.onerror = (e) => {
+    console.error("STT WS error", e);
+  };
+
+  ws.onclose = (e) => {
+    console.log("STT WS closed", e);
+  };
+
+  ws.onmessage = async (event) => {
+    console.log("STT WS message", event.data);
+    try {
+      const data = JSON.parse(event.data as string);
+      if (data.type === "connect_response") {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          if (MediaRecorder.isTypeSupported("audio/webm;codecs=pcm")) {
+            recorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=pcm" });
+            recorder.ondataavailable = (e) => {
+              if (e.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+                e.data.arrayBuffer().then((buf) => ws.send(buf));
+              }
+            };
+          } else {
+            console.warn("PCM recording not supported, sending dummy frames");
+            recorder = new MediaRecorder(stream);
+            recorder.ondataavailable = () => {
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(new ArrayBuffer(320));
+              }
+            };
+          }
+          recorder.start(250);
+        } catch (err) {
+          console.error("Failed to start recording", err);
+        }
+        return;
+      }
+      if (data.transcript) {
+        await onText(data.transcript);
+      }
+    } catch (err) {
+      console.error("Failed to parse message", err);
+    }
+  };
+
+  return stop;
+}
 
 interface AgentPanelProps {
   language: "hr" | "en";
@@ -96,47 +170,57 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     const stopStt = startSttStream(
       import.meta.env.VITE_ELEVENLABS_API_KEY,
       async (userText) => {
-        await fetch("/api/agent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conversationId, role: "user", text: userText, mode: "voice" })
-        });
+        try {
+          await fetch("/api/agent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conversationId, role: "user", text: userText, mode: "voice" })
+          });
 
-        const chatRes = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conversationId, text: userText, language })
-        });
-        const { reply } = await chatRes.json();
+          const chatRes = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conversationId, text: userText, language })
+          });
+          if (!chatRes.ok) {
+            throw new Error(`Chat API failed: ${chatRes.status}`);
+          }
+          const { reply } = await chatRes.json();
 
-        await fetch("/api/agent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conversationId,
-            role: "assistant",
-            text: reply,
-            mode: "voice"
-          })
-        });
+          await fetch("/api/agent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              conversationId,
+              role: "assistant",
+              text: reply,
+              mode: "voice"
+            })
+          });
 
-        const ttsRes = await fetch("/api/tts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text: reply,
-            voiceId: import.meta.env.VITE_ELEVENLABS_VOICE_ID
-          })
-        });
-        const audioBlob = await ttsRes.blob();
-        const url = URL.createObjectURL(audioBlob);
-        new Audio(url).play();
+          const ttsRes = await fetch("/api/tts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: reply,
+              voiceId: import.meta.env.VITE_ELEVENLABS_VOICE_ID
+            })
+          });
+          if (!ttsRes.ok) {
+            throw new Error(`TTS API failed: ${ttsRes.status}`);
+          }
+          const audioBlob = await ttsRes.blob();
+          const url = URL.createObjectURL(audioBlob);
+          new Audio(url).play();
 
-        setMessages(prev => [
-          ...prev,
-          { type: "user" as const, text: userText, time: new Date().toLocaleTimeString() },
-          { type: "agent" as const, text: reply, time: new Date().toLocaleTimeString() }
-        ]);
+          setMessages(prev => [
+            ...prev,
+            { type: "user" as const, text: userText, time: new Date().toLocaleTimeString() },
+            { type: "agent" as const, text: reply, time: new Date().toLocaleTimeString() }
+          ]);
+        } catch (err) {
+          console.error("Voice pipeline error", err);
+        }
       }
     );
 
