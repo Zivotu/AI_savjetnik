@@ -127,10 +127,31 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           body: JSON.stringify({ conversationId, role: "user", text: userText, mode: "voice" })
         });
 
+        const chatRes = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversationId, text: userText, language })
+        });
+        const { reply } = await chatRes.json();
+
+        await fetch("/api/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversationId,
+            role: "assistant",
+            text: reply,
+            mode: "voice"
+          })
+        });
+
         const ttsRes = await fetch("/api/tts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: userText, voiceId: import.meta.env.VITE_ELEVENLABS_VOICE_ID })
+          body: JSON.stringify({
+            text: reply,
+            voiceId: import.meta.env.VITE_ELEVENLABS_VOICE_ID
+          })
         });
         const audioBlob = await ttsRes.blob();
         const url = URL.createObjectURL(audioBlob);
@@ -139,7 +160,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         setMessages(prev => [
           ...prev,
           { type: "user" as const, text: userText, time: new Date().toLocaleTimeString() },
-          { type: "agent" as const, text: userText, time: new Date().toLocaleTimeString() }
+          { type: "agent" as const, text: reply, time: new Date().toLocaleTimeString() }
         ]);
       }
     );
