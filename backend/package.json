@@ -1,0 +1,12 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

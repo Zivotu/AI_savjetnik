@@ -1,26 +1,27 @@
-import { Router } from "express";
-import crypto from "node:crypto";
-import storage, { Turn } from "../utils/storage";
+import { Router } from 'express';
+import { appendTurn, updateConversation } from '../utils/storage';
 
 const router = Router();
 
-router.post("/", async (req, res) => {
-  const {
-    conversationId = crypto.randomUUID(),
-    role,
-    text,
-    phase,
-    mode,
-    language,
-  } = req.body;
+router.post('/', async (req, res) => {
+  const { conversationId, role, text, phase, mode } = req.body as {
+    conversationId: string;
+    role: 'user' | 'assistant' | 'tool';
+    text: string;
+    phase?: 'intro' | 'collect' | 'closing' | 'ended';
+    mode?: 'voice' | 'chat';
+  };
 
-  const turn: Turn & { mode?: string } = { role, text, t: Date.now(), phase };
+  await appendTurn(conversationId, { role, text, phase, mode });
 
-  await storage.appendTurn(conversationId, turn);
+  if (phase === 'ended') {
+    await updateConversation(conversationId, {
+      finished: true,
+      finishedAt: new Date().toISOString(),
+    });
+  }
 
-  await storage.updateConversation(conversationId, { phase, mode, language });
-
-  res.status(200).json({ conversationId });
+  res.status(200).json({ ok: true });
 });
 
 export default router;
