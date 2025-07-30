@@ -13,6 +13,11 @@ const transcripts_1 = __importDefault(require("./routes/transcripts"));
 const solution_1 = __importDefault(require("./routes/solution"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+// Logging middleware for debugging purposes
+app.use((req, _res, next) => {
+    console.log(req.method, req.originalUrl, req.body);
+    next();
+});
 app.use('/api/agent', agent_1.default);
 // Mount the TTS proxy under /api/tts
 app.use('/api/tts', tts_1.default);
