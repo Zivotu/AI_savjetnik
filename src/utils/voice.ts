@@ -1,0 +1,26 @@
+export type STTCallback = (text: string) => void;
+
+export function startSttStream(apiKey: string, onText: STTCallback) {
+  const ws = new WebSocket(`wss://api.elevenlabs.io/v1/speech-to-text/ws?xi-api-key=${apiKey}`);
+
+  ws.addEventListener("open", async () => {
+    // getUserMedia → MediaRecorder chunks → send ArrayBuffer
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+
+    recorder.addEventListener("dataavailable", (e) => {
+      if (e.data && e.data.size > 0) e.data.arrayBuffer().then(buf => ws.send(buf));
+    });
+    recorder.start(250); // every 250 ms
+  });
+
+  ws.addEventListener("message", (e) => {
+    const data = JSON.parse(e.data as string);
+    if (data.transcript) {
+      onText(data.transcript);
+      if (data.stop) ws.close();
+    }
+  });
+
+  return () => ws.close();
+}
