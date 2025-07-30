@@ -42,13 +42,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       mute: "Mute",
       privacy: "Razgovor se snima i transkribira u produkciji. Ovo je demo bez snimanja.",
       learnMore: "Saznaj više",
-      steps: ["Uvod", "Pitanja", "Rješenje"],
-      demoMessages: [
-        "Bok! Primjer 1: AI može automatski izraditi ponudu iz e‑mail upita.",
-        "Primjer 2: Sažimanje računa u tablicu bez ručnog pretipkavanja.",
-        "Koje su najveće repetitivne zadatke u vašoj tvrtki?",
-        "Koristite li već neke automatizacije u poslovanju?"
-      ]
+      steps: ["Uvod", "Pitanja", "Rješenje"]
     },
     en: {
       title: "ONE AI solution for your company in 90 seconds.",
@@ -58,13 +52,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       mute: "Mute",
       privacy: "Conversation is recorded and transcribed in production. This is a demo without recording.",
       learnMore: "Learn more",
-      steps: ["Intro", "Questions", "Solution"],
-      demoMessages: [
-        "Hello! Example 1: AI can automatically create quotes from email inquiries.",
-        "Example 2: Summarizing invoices into tables without manual retyping.",
-        "What are the biggest repetitive tasks in your company?",
-        "Do you already use any automation in your business?"
-      ]
+      steps: ["Intro", "Questions", "Solution"]
     }
   } as const;
 
@@ -75,23 +63,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setCurrentStep(prev => (prev + 1) % 3);
     }, 5000);
 
-    const messageInterval = setInterval(() => {
-      setMessages(prev => {
-        if (prev.length >= currentTexts.demoMessages.length) return prev;
-        const newMessage = {
-          type: "agent" as const,
-          text: currentTexts.demoMessages[prev.length],
-          time: new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" })
-        };
-        return [...prev, newMessage];
-      });
-    }, 3000);
-
     return () => {
       clearInterval(interval);
-      clearInterval(messageInterval);
     };
-  }, [currentTexts.demoMessages]);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

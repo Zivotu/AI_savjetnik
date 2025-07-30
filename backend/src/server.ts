@@ -1,3 +1,4 @@
+require("dotenv").config();
 import express from 'express';
 import agentRouter from './routes/agent';
 // Import the ElevenLabs TTS proxy router
