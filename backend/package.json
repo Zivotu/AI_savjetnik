@@ -1,11 +1,11 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "dist/server.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn src/server.ts"
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn src/index.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.1",
