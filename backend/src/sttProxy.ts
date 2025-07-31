@@ -3,7 +3,8 @@ import { Socket } from 'net';
 import { WebSocketServer, WebSocket, RawData } from 'ws';
 
 export function attachSttProxy(server: HTTPServer) {
-  if (process.env.DISABLE_STT === '1') {
+  const isDisabled = process.env.DISABLE_STT === '1';
+  if (isDisabled) {
     server.on('upgrade', (req: IncomingMessage, socket: Socket) => {
       if (req.url === '/api/stt') {
         socket.write(
