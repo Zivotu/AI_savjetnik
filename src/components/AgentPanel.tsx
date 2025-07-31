@@ -40,6 +40,59 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const eviPlayerRef = useRef<EviWebAudioPlayer | null>(null);
   const closingHandled = useRef(false);
 
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const questions = {
+    hr: [
+      "Koji vam je najdosadniji repetitivan zadatak?",
+      "Koliko vremena tjedno trošite na taj zadatak?",
+      "Postoji li još neki proces koji biste željeli poboljšati?"
+    ],
+    en: [
+      "What is your most tedious repetitive task?",
+      "How much time do you spend on it weekly?",
+      "Is there another process you'd like to improve?"
+    ]
+  } as const;
+
+  async function speak(text: string, phaseLabel: 'intro' | 'collect' = 'collect') {
+    try {
+      await fetch('/api/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId, role: 'assistant', text, phase: phaseLabel, mode: 'voice' })
+      });
+      setMessages(prev => [
+        ...prev,
+        { type: 'agent', text, time: new Date().toLocaleTimeString() }
+      ]);
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const blob = await res.blob();
+      new Audio(URL.createObjectURL(blob)).play();
+    } catch (err) {
+      console.error('speak failed', err);
+    }
+  }
+
+  async function speakIntro() {
+    const text =
+      language === 'hr'
+        ? 'Pozdrav! Ja sam vaš AI savjetnik. Kliknite “Prihvaćam” ako se slažete sa snimanjem.'
+        : 'Hello! I am your AI consultant. Please click “Accept” to allow recording.';
+    await speak(text, 'intro');
+  }
+
+  async function speakNextQuestion() {
+    const list = questions[language];
+    if (questionIndex >= list.length) return;
+    const q = list[questionIndex];
+    setQuestionIndex(prev => prev + 1);
+    await speak(q, 'collect');
+  }
+
   const texts = {
     hr: {
       title: "U 90 sekundi do JEDNOG AI rješenja za vašu tvrtku.",
@@ -74,6 +127,13 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       clearInterval(interval);
     };
   }, []);
+
+  useEffect(() => {
+    if (!consentGiven && phase === 'idle') {
+      speakIntro();
+      setPhase('intro');
+    }
+  }, [consentGiven, phase]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -142,12 +202,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         const ttsRes = await fetch("/api/tts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: solutionText, voiceId: import.meta.env.VITE_ELEVENLABS_VOICE_ID })
+          body: JSON.stringify({ text: solutionText })
         });
         const blob = await ttsRes.blob();
         const url = URL.createObjectURL(blob);
         new Audio(url).play();
-        speechSynthesis.speak(new SpeechSynthesisUtterance(solutionText));
 
         await fetch("/api/agent", {
           method: "POST",
@@ -169,7 +228,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     const player = new EviWebAudioPlayer();
     eviPlayerRef.current = player;
 
-    const ws = new WebSocket("ws://localhost:3000/api/evi");
+    const wsUrl =
+      (window.location.protocol === "https:" ? "wss://" : "ws://") +
+      window.location.host +
+      "/api/evi";
+    const ws = new WebSocket(wsUrl);
     eviSocketRef.current = ws;
 
     ws.onmessage = (event) => {
@@ -204,6 +267,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
     setPhase("collect");
     startAt.current = Date.now();
+    setQuestionIndex(0);
+    await speakNextQuestion();
 
     const stopStt = startSttStream(
       async (userText) => {
@@ -244,8 +309,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              text: reply,
-              voiceId: import.meta.env.VITE_ELEVENLABS_VOICE_ID
+              text: reply
             })
           });
           if (!ttsRes.ok) {
@@ -254,16 +318,15 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           const audioBlob = await ttsRes.blob();
           const url = URL.createObjectURL(audioBlob);
           new Audio(url).play();
-          // Use Web Speech API as a fallback so browsers can play the text
-          console.log("Speaking:", reply);
-          const utterance = new SpeechSynthesisUtterance(reply);
-          speechSynthesis.speak(utterance);
 
           setMessages(prev => [
             ...prev,
             { type: "user" as const, text: userText, time: new Date().toLocaleTimeString() },
             { type: "agent" as const, text: reply, time: new Date().toLocaleTimeString() }
           ]);
+          if (questionIndex < questions[language].length) {
+            await speakNextQuestion();
+          }
         } catch (err) {
           console.error("Voice pipeline error", err);
         }
