@@ -44,6 +44,9 @@ npm run dev
 npm run dev:server
 ```
 
+To disable the speech-to-text proxy (helpful when using the free ElevenLabs plan), create a `.env` file and set `DISABLE_STT=1` before starting the backend.
+
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).
