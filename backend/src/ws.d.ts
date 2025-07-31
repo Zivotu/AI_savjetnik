@@ -8,12 +8,17 @@ declare module 'ws' {
     send(data: RawData): void;
     close(code?: number, reason?: string): void;
     on(event: 'message', listener: (data: RawData) => void): this;
+    on(event: 'open', listener: () => void): this;
     on(event: 'close', listener: () => void): this;
+    on(event: 'error', listener: (err: Error) => void): this;
   }
 
   export class WebSocketServer {
     constructor(options?: any);
     handleUpgrade(req: any, socket: any, head: any, cb: (client: WebSocket) => void): void;
     on(event: 'connection', listener: (socket: WebSocket, request: any) => void): this;
+    on(event: 'error', listener: (err: Error) => void): this;
   }
+
+  export default WebSocket;
 }
