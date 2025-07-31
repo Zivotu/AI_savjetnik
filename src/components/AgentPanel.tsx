@@ -205,6 +205,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           const audioBlob = await ttsRes.blob();
           const url = URL.createObjectURL(audioBlob);
           new Audio(url).play();
+          // Use Web Speech API as a fallback so browsers can play the text
+          console.log("Speaking:", reply);
+          const utterance = new SpeechSynthesisUtterance(reply);
+          speechSynthesis.speak(utterance);
 
           setMessages(prev => [
             ...prev,
