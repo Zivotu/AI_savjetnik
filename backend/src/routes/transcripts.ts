@@ -13,7 +13,7 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 
 // GET /api/transcripts  → list
 router.get("/", async (_req: Request, res: Response) => {
-  const files = await fs.readdir(DIR);
+  const files = (await fs.readdir(DIR)).filter(f => f.endsWith(".json"));
   const data = await Promise.all(
     files.map(async f => {
       const json = JSON.parse(await fs.readFile(path.join(DIR, f), "utf8"));

@@ -16,7 +16,7 @@ router.use((req, res, next) => {
 });
 // GET /api/transcripts  → list
 router.get("/", async (_req, res) => {
-    const files = await promises_1.default.readdir(DIR);
+    const files = (await promises_1.default.readdir(DIR)).filter(f => f.endsWith(".json"));
     const data = await Promise.all(files.map(async (f) => {
         const json = JSON.parse(await promises_1.default.readFile(node_path_1.default.join(DIR, f), "utf8"));
         return {
