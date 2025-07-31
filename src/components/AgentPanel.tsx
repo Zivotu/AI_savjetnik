@@ -6,6 +6,9 @@ import ContactConfirm from "./ContactConfirm";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { startSttStream, type STTCallback } from "@/utils/voice";
 
+const COLLECT_TIMEOUT_MS =
+  Number(import.meta.env.VITE_COLLECT_TIMEOUT_MS ?? "120000") || 120000;
+
 interface AgentPanelProps {
   language: "hr" | "en";
 }
@@ -271,7 +274,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       stopStt();
       eviSocketRef.current?.close();
       setPhase("closing");
-    }, 175000);
+    }, COLLECT_TIMEOUT_MS);
   }
 
   async function handleConsent() {
