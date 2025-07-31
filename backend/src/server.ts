@@ -7,6 +7,7 @@ import eviRouter from './routes/evi';
 import chatRouter from './routes/chat';
 import transcriptsRouter from './routes/transcripts';
 import solutionRouter from './routes/solution';
+import summaryRouter from './routes/summary';
 
 const app = express();
 
@@ -24,5 +25,6 @@ app.use('/api/evi', eviRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/transcripts', transcriptsRouter);
 app.use('/api/solution', solutionRouter);
+app.use('/api/summary', summaryRouter);
 
 export default app;

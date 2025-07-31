@@ -44,3 +44,15 @@ Return plain text only.`;
         : "Call us at +385 1 XXX XXX or reply 'YES' and we'll call you.",
   };
 }
+
+export async function summarizeConversation(transcript: string, lang: "hr" | "en"): Promise<string> {
+  const prompt =
+    lang === "hr"
+      ? `Sažmi sljedeći razgovor u 2-3 kratke rečenice na hrvatskom jeziku:\n${transcript}`
+      : `Summarize the following conversation in 2-3 short sentences:\n${transcript}`;
+  const res = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+  });
+  return res.choices[0].message.content?.trim() || "";
+}
