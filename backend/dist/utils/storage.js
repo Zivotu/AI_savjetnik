@@ -7,7 +7,7 @@ exports.appendTurn = appendTurn;
 exports.updateConversation = updateConversation;
 const promises_1 = __importDefault(require("node:fs/promises"));
 const node_path_1 = __importDefault(require("node:path"));
-const DIR = node_path_1.default.join(process.cwd(), 'backend', 'transcripts');
+const DIR = node_path_1.default.resolve(__dirname, '../../transcripts');
 async function readConversation(id) {
     const file = node_path_1.default.join(DIR, `${id}.json`);
     try {
