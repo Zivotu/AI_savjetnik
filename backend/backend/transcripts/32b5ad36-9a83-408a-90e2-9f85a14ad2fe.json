@@ -19,6 +19,12 @@
       "text": "bok22",
       "mode": "chat",
       "t": 1753921452521
+    },
+    {
+      "role": "user",
+      "text": "bok",
+      "mode": "chat",
+      "t": 1753960529541
     }
   ]
 }
