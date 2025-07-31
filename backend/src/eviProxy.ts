@@ -1,7 +1,8 @@
 import { Server as HTTPServer, IncomingMessage } from 'http';
 import { Socket } from 'net';
-import { WebSocketServer, RawData, WebSocket as ClientSocket } from 'ws';
-import WebSocket from 'ws';
+import { WebSocketServer, WebSocket, RawData } from 'ws';
+
+type ClientSocket = WebSocket;
 
 export function attachEviProxy(server: HTTPServer) {
   const wss = new WebSocketServer({ noServer: true });
