@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const DIR = path.join(process.cwd(), 'backend', 'transcripts');
+const DIR = path.resolve(__dirname, '../../transcripts');
 
 async function readConversation(id: string): Promise<Record<string, any>> {
   const file = path.join(DIR, `${id}.json`);
