@@ -3,6 +3,7 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import agentRouter from './routes/agent';
 // Import the ElevenLabs TTS proxy router
 import ttsRouter from './routes/tts';
+import eviRouter from './routes/evi';
 import chatRouter from './routes/chat';
 import transcriptsRouter from './routes/transcripts';
 import solutionRouter from './routes/solution';
@@ -19,6 +20,7 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.use('/api/agent', agentRouter);
 // Mount the TTS proxy under /api/tts
 app.use('/api/tts', ttsRouter);
+app.use('/api/evi', eviRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/transcripts', transcriptsRouter);
 app.use('/api/solution', solutionRouter);
