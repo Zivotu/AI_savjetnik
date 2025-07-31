@@ -16,9 +16,11 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "localhost",
     port: 5173,
+    // Proxy API requests during development to the Express backend
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        // Ensure calls are forwarded to the backend listening on port 3000
+        target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
       },
