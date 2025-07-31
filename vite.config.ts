@@ -19,10 +19,11 @@ export default defineConfig(({ mode }) => ({
     // Proxy API requests during development to the Express backend
     proxy: {
       "/api": {
-        // Ensure calls are forwarded to the backend listening on port 3000
+        // Forward API calls directly to the Express backend
         target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
+        // No rewrite here so "/api" is preserved when proxying requests
       },
     },
   },
