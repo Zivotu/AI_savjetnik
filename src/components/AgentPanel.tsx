@@ -4,71 +4,7 @@ import { Button } from "@/components/ui/button";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
-
-type STTCallback = (text: string) => void | Promise<void>;
-
-function startSttStream(onText: STTCallback) {
-  const ws = new WebSocket("ws://localhost:3000/api/stt");
-
-  let recorder: MediaRecorder | null = null;
-
-  const stop = () => {
-    recorder?.stop();
-    ws.close();
-  };
-
-  ws.onopen = () => {
-    console.log("STT WS opened");
-    ws.send(
-      JSON.stringify({
-        type: "connect_request",
-        sample_rate: 16000,
-        encoding: "pcm_s16le",
-        format: "wav"
-      })
-    );
-
-    // Simulate receiving a transcript without actual audio streaming
-    setTimeout(() => {
-      ws.dispatchEvent(
-        new MessageEvent("message", {
-          data: JSON.stringify({
-            transcript:
-              "Naša tvrtka ima problem s ručnim unošenjem podataka."
-          })
-        })
-      );
-    }, 2000);
-  };
-
-  ws.onerror = (e) => {
-    console.error("STT WS error", e);
-  };
-
-  ws.onclose = (e) => {
-    console.log("STT WS closed", e);
-  };
-
-  ws.onmessage = async (event) => {
-    console.log("STT WS message", event.data);
-    try {
-      const data = JSON.parse(event.data as string);
-      if (data.type === "connect_response") {
-        // In the demo environment we skip starting MediaRecorder
-        // to avoid browser errors when ElevenLabs rejects the stream
-        console.log("STT connect_response received (demo mode)");
-        return;
-      }
-      if (data.transcript) {
-        await onText(data.transcript);
-      }
-    } catch (err) {
-      console.error("Failed to parse message", err);
-    }
-  };
-
-  return stop;
-}
+import { startSttStream, type STTCallback } from "@/utils/voice";
 
 interface AgentPanelProps {
   language: "hr" | "en";
@@ -99,6 +35,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const eviSocketRef = useRef<WebSocket | null>(null);
   const eviPlayerRef = useRef<EviWebAudioPlayer | null>(null);
+  const closingHandled = useRef(false);
 
   const texts = {
     hr: {
@@ -150,6 +87,78 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setContactOpen(true);
     }
   }, [phase, contactSubmitted]);
+
+  useEffect(() => {
+    if (phase !== "closing" || closingHandled.current) return;
+    closingHandled.current = true;
+
+    async function finalize() {
+      const transcript = messages
+        .map(m => `${m.type === "user" ? "User" : "Agent"}: ${m.text}`)
+        .join("\n");
+
+      try {
+        const sumRes = await fetch("/api/summary", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-conversation-id": conversationId
+          },
+          body: JSON.stringify({ transcript, language })
+        });
+        const { summary } = await sumRes.json();
+
+        const solRes = await fetch("/api/solution", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-conversation-id": conversationId
+          },
+          body: JSON.stringify({ summary, language })
+        });
+        const sol = await solRes.json();
+        const solutionText = `${sol.solutionText}\n${sol.cta}`;
+
+        await fetch("/api/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversationId,
+            role: "assistant",
+            text: solutionText,
+            phase: "closing",
+            mode: "voice"
+          })
+        });
+
+        setMessages(prev => [
+          ...prev,
+          { type: "agent", text: solutionText, time: new Date().toLocaleTimeString() }
+        ]);
+
+        const ttsRes = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: solutionText, voiceId: import.meta.env.VITE_ELEVENLABS_VOICE_ID })
+        });
+        const blob = await ttsRes.blob();
+        const url = URL.createObjectURL(blob);
+        new Audio(url).play();
+        speechSynthesis.speak(new SpeechSynthesisUtterance(solutionText));
+
+        await fetch("/api/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversationId, role: "system", text: "CONVO_END", phase: "ended" })
+        });
+        setPhase("ended");
+      } catch (err) {
+        console.error("finalize failed", err);
+      }
+    }
+
+    finalize();
+  }, [phase, messages, language, conversationId]);
 
   useEffect(() => {
     if (phase !== "collect") return;

@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSolution = getSolution;
+exports.summarizeConversation = summarizeConversation;
 require("dotenv/config");
 const openai_1 = __importDefault(require("openai"));
 const openai = new openai_1.default({
@@ -39,4 +40,14 @@ Return plain text only.`;
             ? "Nazovite nas na +385 1 XXX XXX ili napišite 'DA' pa vas zovemo."
             : "Call us at +385 1 XXX XXX or reply 'YES' and we'll call you.",
     };
+}
+async function summarizeConversation(transcript, lang) {
+    const prompt = lang === "hr"
+        ? `Sažmi sljedeći razgovor u 2-3 kratke rečenice na hrvatskom jeziku:\n${transcript}`
+        : `Summarize the following conversation in 2-3 short sentences:\n${transcript}`;
+    const res = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+    });
+    return res.choices[0].message.content?.trim() || "";
 }
