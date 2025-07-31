@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "vercel-build": "cd backend && npm run build",
     "type-check": "tsc --noEmit",
-    "dev:server": "ts-node-dev --respawn server.ts"
+    "dev:server": "cd backend && npm run dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
