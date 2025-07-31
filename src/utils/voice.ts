@@ -1,7 +1,7 @@
 export type STTCallback = (text: string) => void;
 
-export function startSttStream(apiKey: string, onText: STTCallback) {
-  const ws = new WebSocket("wss://api.elevenlabs.io/v1/speech-to-text/ws", ["xi-api-key", apiKey]);
+export function startSttStream(onText: STTCallback) {
+  const ws = new WebSocket("ws://localhost:3000/api/stt");
 
 
   ws.addEventListener("open", async () => {
