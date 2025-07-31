@@ -3,6 +3,7 @@ import { Play, MessageCircle, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
+import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 
 type STTCallback = (text: string) => void | Promise<void>;
 
@@ -96,6 +97,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const startAt = useRef(0);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const eviSocketRef = useRef<WebSocket | null>(null);
+  const eviPlayerRef = useRef<EviWebAudioPlayer | null>(null);
 
   const texts = {
     hr: {
@@ -148,6 +151,39 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     }
   }, [phase, contactSubmitted]);
 
+  useEffect(() => {
+    if (phase !== "collect") return;
+
+    const player = new EviWebAudioPlayer();
+    eviPlayerRef.current = player;
+
+    const ws = new WebSocket("ws://localhost:3000/api/evi");
+    eviSocketRef.current = ws;
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data as string);
+        if (data.audio_output?.data) {
+          player.enqueueBase64(data.audio_output.data);
+        }
+        if (data.event === "user_interruption") {
+          player.stop();
+        }
+      } catch (err) {
+        console.error("Failed to parse EVI message", err);
+      }
+    };
+
+    ws.onclose = () => {
+      player.stop();
+    };
+
+    return () => {
+      ws.close();
+      player.stop();
+    };
+  }, [phase]);
+
   async function startVoice() {
     if (!consentGiven) {
       setGdprOpen(true);
@@ -160,6 +196,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     const stopStt = startSttStream(
       async (userText) => {
         try {
+          if (eviSocketRef.current?.readyState === WebSocket.OPEN) {
+            eviSocketRef.current.send(
+              JSON.stringify({ text: userText })
+            );
+          }
           await fetch("/api/agent", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -219,6 +260,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
     timer.current = setTimeout(() => {
       stopStt();
+      eviSocketRef.current?.close();
       setPhase("closing");
     }, 175000);
   }
