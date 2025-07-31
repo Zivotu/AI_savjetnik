@@ -3,6 +3,21 @@ import { Socket } from 'net';
 import { WebSocketServer, WebSocket, RawData } from 'ws';
 
 export function attachSttProxy(server: HTTPServer) {
+  if (process.env.DISABLE_STT === '1') {
+    server.on('upgrade', (req: IncomingMessage, socket: Socket) => {
+      if (req.url === '/api/stt') {
+        socket.write(
+          'HTTP/1.1 501 Not Implemented\r\n' +
+            'Content-Type: application/json\r\n\r\n' +
+            JSON.stringify({ error: 'STT disabled (DISABLE_STT=1)' })
+        );
+        socket.destroy();
+      }
+    });
+    console.log('🔇  STT proxy disabled via DISABLE_STT=1');
+    return;
+  }
+
   const wss = new WebSocketServer({ noServer: true });
 
   server.on('upgrade', (req: IncomingMessage, socket: Socket, head: Buffer) => {
