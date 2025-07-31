@@ -3,7 +3,7 @@ declare module 'ws' {
 
   export class WebSocket {
     static OPEN: number;
-    constructor(address: string, protocols?: string | string[]);
+    constructor(address: string, protocols?: string | string[], options?: any);
     readyState: number;
     send(data: RawData): void;
     close(code?: number, reason?: string): void;
