@@ -1,0 +1,24 @@
+{
+  "id": "32b5ad36-9a83-408a-90e2-9f85a14ad2fe",
+  "created": "2025-07-31T00:16:01.713Z",
+  "turns": [
+    {
+      "role": "user",
+      "text": "bok",
+      "mode": "chat",
+      "t": 1753920961714
+    },
+    {
+      "role": "user",
+      "text": "bok",
+      "mode": "chat",
+      "t": 1753921374809
+    },
+    {
+      "role": "user",
+      "text": "bok22",
+      "mode": "chat",
+      "t": 1753921452521
+    }
+  ]
+}
