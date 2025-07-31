@@ -3,6 +3,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.attachSttProxy = attachSttProxy;
 const ws_1 = require("ws");
 function attachSttProxy(server) {
+    const isDisabled = process.env.DISABLE_STT === '1';
+    if (isDisabled) {
+        server.on('upgrade', (req, socket) => {
+            if (req.url === '/api/stt') {
+                socket.write('HTTP/1.1 501 Not Implemented\r\n' +
+                    'Content-Type: application/json\r\n\r\n' +
+                    JSON.stringify({ error: 'STT disabled (DISABLE_STT=1)' }));
+                socket.destroy();
+            }
+        });
+        console.log('🔇  STT proxy disabled via DISABLE_STT=1');
+        return;
+    }
     const wss = new ws_1.WebSocketServer({ noServer: true });
     server.on('upgrade', (req, socket, head) => {
         if (req.url !== '/api/stt')
