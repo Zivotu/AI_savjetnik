@@ -6,11 +6,8 @@ import ContactConfirm from "./ContactConfirm";
 
 type STTCallback = (text: string) => void | Promise<void>;
 
-function startSttStream(apiKey: string, onText: STTCallback) {
-  const ws = new WebSocket(
-    "wss://api.elevenlabs.io/v1/speech-to-text/ws",
-    ["xi-api-key", apiKey]
-  );
+function startSttStream(onText: STTCallback) {
+  const ws = new WebSocket("ws://localhost:3000/api/stt");
 
   let recorder: MediaRecorder | null = null;
 
@@ -161,7 +158,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     startAt.current = Date.now();
 
     const stopStt = startSttStream(
-      import.meta.env.VITE_ELEVENLABS_API_KEY,
       async (userText) => {
         try {
           await fetch("/api/agent", {
