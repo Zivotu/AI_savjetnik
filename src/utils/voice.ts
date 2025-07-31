@@ -1,7 +1,11 @@
 export type STTCallback = (text: string) => void;
 
 export function startSttStream(onText: STTCallback) {
-  const ws = new WebSocket("ws://localhost:3000/api/stt");
+  const wsUrl =
+    (window.location.protocol === "https:" ? "wss://" : "ws://") +
+    window.location.host +
+    "/api/stt";
+  const ws = new WebSocket(wsUrl);
 
 
   ws.addEventListener("open", async () => {
