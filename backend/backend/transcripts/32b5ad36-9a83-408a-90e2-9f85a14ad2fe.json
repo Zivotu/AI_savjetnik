@@ -43,6 +43,12 @@
       "text": "hey",
       "mode": "chat",
       "t": 1753965701594
+    },
+    {
+      "role": "user",
+      "text": "hey",
+      "mode": "chat",
+      "t": 1753967426925
     }
   ]
 }
