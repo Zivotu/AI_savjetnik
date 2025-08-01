@@ -49,6 +49,71 @@
       "text": "hey",
       "mode": "chat",
       "t": 1753967426925
+    },
+    {
+      "role": "assistant",
+      "text": "Koji vam je najdosadniji repetitivan zadatak?",
+      "phase": "collect",
+      "mode": "voice",
+      "t": 1753972645133
+    },
+    {
+      "role": "assistant",
+      "text": "undefined\nundefined",
+      "phase": "closing",
+      "mode": "voice",
+      "t": 1753972766362
+    },
+    {
+      "role": "system",
+      "text": "CONVO_END",
+      "phase": "ended",
+      "t": 1753972766690
+    },
+    {
+      "role": "assistant",
+      "text": "Koji vam je najdosadniji repetitivan zadatak?",
+      "phase": "collect",
+      "mode": "voice",
+      "t": 1754046886789
+    },
+    {
+      "role": "assistant",
+      "text": "undefined\nundefined",
+      "phase": "closing",
+      "mode": "voice",
+      "t": 1754047007746
+    },
+    {
+      "role": "system",
+      "text": "CONVO_END",
+      "phase": "ended",
+      "t": 1754047008073
+    },
+    {
+      "role": "user",
+      "text": "CONTACT::amir.serbic@yahoo.com|0913066505",
+      "t": 1754047063961
+    },
+    {
+      "role": "user",
+      "text": "bok",
+      "mode": "chat",
+      "t": 1754047086213
+    },
+    {
+      "role": "user",
+      "text": "pozdrav",
+      "mode": "chat",
+      "t": 1754050154672
+    },
+    {
+      "role": "user",
+      "text": "bok",
+      "mode": "chat",
+      "t": 1754050223077
     }
-  ]
+  ],
+  "finished": true,
+  "finishedAt": "2025-08-01T11:16:48.074Z"
 }
