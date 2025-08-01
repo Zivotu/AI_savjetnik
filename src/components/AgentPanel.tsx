@@ -46,7 +46,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     messagesRef.current = messages;
   }, [messages]);
 
-  const { startSession } = useConversation({
+  const { startSession, sendUserMessage, sendUserActivity } = useConversation({
     onMessage: (m) => {
       setMessages((prev) => [
         ...prev,
@@ -249,7 +249,13 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     startAt.current = Date.now();
 
     // 2️⃣ zatraži mikrofon
-    await navigator.mediaDevices.getUserMedia({ audio: true });
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      toast.error(language === "hr" ? "Mikrofon nije dostupan" : "Microphone access denied");
+      setPhase("idle");
+      return;
+    }
 
     // 3️⃣ pokreni ElevenLabs WebRTC STT-TTS
     await startSession({
@@ -320,19 +326,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       })
     });
 
-    const chatRes = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        conversationId,
-        text: input.trim(),
-        language
-      })
-    });
-    const { reply } = await chatRes.json();
-
-    const assistantTurn = { type: "agent" as const, text: reply, time: new Date().toLocaleTimeString() };
-    setMessages(prev => [...prev, assistantTurn]);
+    sendUserMessage(input.trim());
 
     setInput("");
     setSending(false);
@@ -422,7 +416,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                 className="w-full bg-white/60 rounded-lg px-4 py-3 text-sm placeholder:text-muted-foreground"
                 placeholder={language === "hr" ? "Napišite poruku..." : "Type a message..."}
                 value={input}
-                onChange={e => setInput(e.target.value)}
+                onChange={e => {
+                  setInput(e.target.value);
+                  sendUserActivity();
+                }}
                 disabled={mode !== "chat" || sending}
               />
               <button
