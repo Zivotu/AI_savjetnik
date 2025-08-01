@@ -82,3 +82,22 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Troubleshooting voice features
+
+If audio transcription or text-to-speech is not working, verify that the required
+environment variables are present:
+
+- `ELEVENLABS_API_KEY` – API key used when connecting to ElevenLabs.
+- `ELEVENLABS_VOICE_ID` – voice identifier for text‑to‑speech.
+- `TTS_PROVIDER` – choose `elevenlabs` (default) or `hume`.
+- `STT_PROVIDER` – choose `elevenlabs` (default) or `hume`.
+- `HUME_API_KEY` and `HUME_SECRET_KEY` – needed when using Hume services.
+
+Free ElevenLabs accounts do not support streaming speech recognition. If you just
+need text chat, create a `.env` file and set `DISABLE_STT=1` before starting the
+backend.
+
+Make sure your browser or device has granted microphone permission. If problems
+persist, check the terminal running `npm run dev:server` for speech‑to‑text
+errors.
