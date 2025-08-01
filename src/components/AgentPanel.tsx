@@ -432,13 +432,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-foreground">Transkript</h3>
-            <button
-              className="flex items-center justify-center bg-white/50 text-foreground p-2 rounded-lg border border-white/30 hover:bg-white/70 transition-smooth"
-              data-evt="agent_mute"
-              disabled
-            >
-              <VolumeX className="w-4 h-4" />
-            </button>
           </div>
           {phase === "collect" && (
             <p className="text-xs text-muted">🎙️ Snimamo…</p>
