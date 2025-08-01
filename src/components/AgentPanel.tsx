@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, MessageCircle, VolumeX } from "lucide-react";
+import {
+  Play,
+  MessageCircle,
+  VolumeX,
+  Mic,
+  Headphones,
+  Lightbulb,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
@@ -34,6 +41,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const [contactSubmitted, setContactSubmitted] = useState(() => localStorage.getItem("contactDone") === "yes");
 
   const [phase, setPhase] = useState<"idle" | "intro" | "collect" | "closing" | "ended">("idle");
+  const [activeSpeaker, setActiveSpeaker] = useState<"user" | "agent" | null>(null);
   const timer = useRef<NodeJS.Timeout>();
   const startAt = useRef(0);
 
@@ -52,6 +60,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       if (m.source !== "user") {
         setInterim(null);
       }
+      setActiveSpeaker(m.source === "user" ? "user" : "agent");
       setMessages((prev) => [
         ...prev,
         {
@@ -145,6 +154,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         body: JSON.stringify({ conversationId, role: "system", text: "CONVO_END", phase: "ended" })
       });
       setPhase("ended");
+      setActiveSpeaker(null);
     } catch (err) {
       console.error("finalize failed", err);
     }
@@ -220,6 +230,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       try {
         const data = JSON.parse(event.data as string);
         if (data.audio_output?.data) {
+          setActiveSpeaker("agent");
           player.enqueueBase64(data.audio_output.data);
         }
         if (data.event === "user_interruption") {
@@ -258,6 +269,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         mode: "voice",
       }),
     });
+
+    setActiveSpeaker("user");
 
     setPhase("collect");
     startAt.current = Date.now();
@@ -345,6 +358,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     });
 
     sendUserMessage(input.trim());
+    setActiveSpeaker("user");
 
     setInput("");
     setSending(false);
@@ -357,9 +371,15 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           <div className="flex justify-center mb-6">
             <div className="ai-orb w-24 h-24 shadow-glow relative">
               <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                </div>
+                {activeSpeaker === "user" && (
+                  <Mic className={`w-8 h-8 text-green-500`} />
+                )}
+                {activeSpeaker === "agent" && (
+                  <Headphones className={`w-8 h-8 text-green-500`} />
+                )}
+                {activeSpeaker === null && (
+                  <Lightbulb className="w-8 h-8 text-red-500" />
+                )}
               </div>
             </div>
           </div>
@@ -518,3 +538,4 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 };
 
 export default AgentPanel;
+
