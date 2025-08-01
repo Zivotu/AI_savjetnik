@@ -273,7 +273,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
       connectionType: "webrtc",
     });
-    sendUserMessage('Hello, are you there?');
 
 
 
