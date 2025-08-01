@@ -5,7 +5,6 @@ import rateLimit from 'express-rate-limit';
 
 import agentRouter from './routes/agent';
 import ttsRouter from './routes/tts';
-import chatRouter from './routes/chat';
 import transcriptsRouter from './routes/transcripts';
 import solutionRouter from './routes/solution';
 import summaryRouter from './routes/summary';
@@ -35,7 +34,6 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 /* ───────────────  API rute  ─────────────── */
 app.use('/api/agent', agentRouter);
 app.use('/api/tts', ttsRouter);
-app.use('/api/chat', chatRouter);
 app.use('/api/transcripts', transcriptsRouter);
 app.use('/api/solution', solutionRouter);
 app.use('/api/summary', summaryRouter);
