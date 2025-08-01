@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 
-// Router for text-to-speech proxy. Switch provider via env TTS_PROVIDER=[hume|elevenlabs] (default hume)
+// Router for text-to-speech proxy. Switch provider via env TTS_PROVIDER=[hume|elevenlabs] (default elevenlabs)
 const router = Router();
 
 router.post('/', async (req: Request, res: Response) => {
@@ -16,7 +16,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 
   try {
-    const provider = process.env.TTS_PROVIDER ?? 'hume';
+    const provider = process.env.TTS_PROVIDER ?? 'elevenlabs';
 
     if (provider === 'hume') {
       const apiRes = await fetch('https://api.hume.ai/v0/tts/stream/file', {
