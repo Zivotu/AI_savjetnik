@@ -192,15 +192,23 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   const currentTexts = texts[language];
 
+  // Track progress based on the conversation phase
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentStep(prev => (prev + 1) % 3);
-    }, 5000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
+    switch (phase) {
+      case "intro":
+        setCurrentStep(0);
+        break;
+      case "collect":
+        setCurrentStep(1);
+        break;
+      case "closing":
+      case "ended":
+        setCurrentStep(2);
+        break;
+      default:
+        break;
+    }
+  }, [phase]);
 
 
   useEffect(() => {
