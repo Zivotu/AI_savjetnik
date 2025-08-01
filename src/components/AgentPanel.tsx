@@ -17,6 +17,7 @@ interface AgentPanelProps {
 const AgentPanel = ({ language }: AgentPanelProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [messages, setMessages] = useState<Array<{ type: "agent" | "user"; text: string; time: string }>>([]);
+  const [interim, setInterim] = useState<{ type: "agent" | "user"; text: string; time: string } | null>(null);
   const [mode, setMode] = useState<"voice" | "chat">("voice");
   const [conversationId] = useState<string>(() => {
     const stored = localStorage.getItem("convId");
@@ -48,6 +49,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   const { startSession, sendUserMessage, sendUserActivity } = useConversation({
     onMessage: (m) => {
+      if (m.source !== "user") {
+        setInterim(null);
+      }
       setMessages((prev) => [
         ...prev,
         {
@@ -56,6 +60,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           time: new Date().toLocaleTimeString(),
         },
       ]);
+    },
+    onDebug: (d) => {
+      if ((d as any).type === "tentative_agent_response") {
+        setInterim({ type: "agent", text: (d as any).response, time: new Date().toLocaleTimeString() });
+      }
     },
   });
 
@@ -406,6 +415,19 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                   </p>
                 </div>
               ))}
+              {interim && (
+                <div className="flex flex-col space-y-1" key="interim">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-medium">
+                      {interim.type === "user" ? (language === "hr" ? "Vi" : "You") : "Agent"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{interim.time}</span>
+                  </div>
+                  <p className="text-sm text-foreground bg-white/40 rounded-lg p-3 italic opacity-70 animate-fade-in">
+                    {interim.text}
+                  </p>
+                </div>
+              )}
               <div ref={bottomRef} />
             </div>
           </div>
