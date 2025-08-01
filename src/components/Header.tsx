@@ -9,12 +9,12 @@ interface HeaderProps {
 const Header = ({ language, onLanguageChange }: HeaderProps) => {
   const texts = {
     hr: {
-      logo: 'AI Konzultant',
-      support: 'podrška@aiknzultant.hr'
+      logo: 'Neurobiz',
+      support: 'info@neurobiz.me'
     },
     en: {
-      logo: 'AI Consultant',
-      support: 'support@aiknzultant.hr'
+      logo: 'Neurobiz',
+      support: 'info@neurobiz.me'
     }
   };
 

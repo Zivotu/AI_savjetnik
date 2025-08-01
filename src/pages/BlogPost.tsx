@@ -234,16 +234,16 @@ const BlogPost = () => {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-center md:text-left">
               <p className="text-sm text-muted-foreground">
-                © 2024 AI Konzultant. {language === 'hr' ? 'Sva prava pridržana.' : 'All rights reserved.'}
+                © 2024 Neurobiz. {language === 'hr' ? 'Sva prava pridržana.' : 'All rights reserved.'}
               </p>
             </div>
             
             <div className="flex items-center space-x-6">
-              <a 
-                href="mailto:podrška@aiknzultant.hr" 
+              <a
+                href="mailto:info@neurobiz.me"
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                podrška@aiknzultant.hr
+                info@neurobiz.me
               </a>
               <a 
                 href="/privacy" 
