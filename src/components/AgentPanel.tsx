@@ -260,8 +260,13 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     // 3️⃣ pokreni ElevenLabs WebRTC STT-TTS
     await startSession({
       agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
+      onConnect: () => {},
+
       connectionType: "webrtc",
     });
+    sendUserMessage('Hello, are you there?');
+
+
 
     // 4️⃣ nakon timeouta finaliziraj
     timer.current = setTimeout(() => {
