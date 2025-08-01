@@ -5,6 +5,7 @@ import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { startSttStream, type STTCallback } from "@/utils/voice";
+import { toast } from "@/sonner";
 
 const COLLECT_TIMEOUT_MS =
   Number(import.meta.env.VITE_COLLECT_TIMEOUT_MS ?? "120000") || 120000;
@@ -169,6 +170,13 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           },
           body: JSON.stringify({ transcript, language })
         });
+        if (!sumRes.ok) {
+          console.error("Summary API error", await sumRes.text());
+          toast.error(
+            language === "hr" ? "Greška pri sažimanju" : "Summary failed"
+          );
+          return;
+        }
         const { summary } = await sumRes.json();
 
         const solRes = await fetch("/api/solution", {
@@ -179,6 +187,15 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           },
           body: JSON.stringify({ summary, language })
         });
+        if (!solRes.ok) {
+          console.error("Solution API error", await solRes.text());
+          toast.error(
+            language === "hr"
+              ? "Greška pri generiranju rješenja"
+              : "Solution failed"
+          );
+          return;
+        }
         const sol = await solRes.json();
         const solutionText = `${sol.solutionText}\n${sol.cta}`;
 
