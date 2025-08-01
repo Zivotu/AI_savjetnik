@@ -90,6 +90,7 @@ environment variables are present:
 
 - `ELEVENLABS_API_KEY` – API key used when connecting to ElevenLabs.
 - `ELEVENLABS_VOICE_ID` – voice identifier for text‑to‑speech.
+- `VITE_ELEVEN_AGENT_ID` – agent identifier for ElevenLabs WebRTC voice.
 - `TTS_PROVIDER` – choose `elevenlabs` (default) or `hume`.
 - `STT_PROVIDER` – choose `elevenlabs` (default) or `hume`.
 - `HUME_API_KEY` and `HUME_SECRET_KEY` – needed when using Hume services.
