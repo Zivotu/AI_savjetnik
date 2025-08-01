@@ -25,6 +25,8 @@ export function attachSttProxy(server: HTTPServer) {
     if (req.url !== '/api/stt') return;
     wss.handleUpgrade(req, socket, head, (client: WebSocket) => {
       const provider = process.env.STT_PROVIDER ?? 'elevenlabs';
+      console.log(`🔊  STT provider = ${provider}`);
+
 
       const upstream =
         provider === 'elevenlabs'
@@ -37,7 +39,9 @@ export function attachSttProxy(server: HTTPServer) {
                 'X-Hume-Api-Secret': process.env.HUME_SECRET_KEY ?? '',
               },
             });
-
+new WebSocket(
+  `wss://api.hume.ai/v0/stream/models/speech-to-text?apiKey=${process.env.HUME_API_KEY}`,
+    );
       client.on('message', (msg: RawData) => {
         if (upstream.readyState === WebSocket.OPEN) {
           upstream.send(msg);

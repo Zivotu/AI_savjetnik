@@ -1,36 +1,42 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const DIR = path.resolve(__dirname, '../../transcripts');
 
-async function readConversation(id: string): Promise<Record<string, any>> {
-  const file = path.join(DIR, `${id}.json`);
+type Turn = {
+  role: 'user' | 'assistant' | 'tool';
+  text: string;
+  phase?: 'intro' | 'collect' | 'closing' | 'ended';
+  mode?: 'voice' | 'chat';
+  ts?: string;
+};
+
+async function readConversation(id: string) {
   try {
-    const data = await fs.readFile(file, 'utf8');
-    return JSON.parse(data);
+    return JSON.parse(await fs.readFile(filePath(id), 'utf8'));
   } catch {
-    return { id, created: new Date().toISOString(), turns: [] };
+    return { id, created: new Date().toISOString(), turns: [] as Turn[] };
   }
 }
 
-async function writeConversation(id: string, convo: Record<string, any>): Promise<void> {
+async function writeAtomic(id: string, convo: unknown) {
   await fs.mkdir(DIR, { recursive: true });
-  const file = path.join(DIR, `${id}.json`);
-  await fs.writeFile(file, JSON.stringify(convo, null, 2), 'utf8');
+  const tmp = path.join(DIR, `${randomUUID()}.tmp`);
+  await fs.writeFile(tmp, JSON.stringify(convo, null, 2), 'utf8');
+  await fs.rename(tmp, filePath(id));
 }
 
-export async function appendTurn(id: string, turn: Record<string, any>): Promise<void> {
+const filePath = (id: string) => path.join(DIR, `${id}.json`);
+
+export async function appendTurn(id: string, turn: Turn) {
   const convo = await readConversation(id);
-  if (!Array.isArray(convo.turns)) {
-    convo.turns = [];
-  }
-  turn.t = Date.now();
-  convo.turns.push(turn);
-  await writeConversation(id, convo);
+  (convo.turns as Turn[]).push({ ...turn, ts: new Date().toISOString() });
+  await writeAtomic(id, convo);
 }
 
-export async function updateConversation(id: string, patch: Record<string, any>): Promise<void> {
+export async function updateConversation(id: string, patch: Record<string, unknown>) {
   const convo = await readConversation(id);
   Object.assign(convo, patch);
-  await writeConversation(id, convo);
+  await writeAtomic(id, convo);
 }

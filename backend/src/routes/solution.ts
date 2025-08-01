@@ -14,9 +14,23 @@ router.post("/", async (req: Request, res: Response) => {
   const conversationId = (req.headers["x-conversation-id"] as string) || "unknown";
 
   try {
-    const solution = await getSolution(summary, language);
-    await appendTurn(conversationId, { role: "tool", ...solution });
-    res.json(solution);
+    // getSolution vraća { solutionText: string; cta: string }
+    const { solutionText, cta } = await getSolution(summary, language);
+
+    // spremi glavni tekst rješenja
+    await appendTurn(conversationId, {
+      role: "tool",
+      text: solutionText
+    });
+
+    // spremi CTA kao zaseban turn (ili ih kombinirajte ako više voliš jedno polje)
+    await appendTurn(conversationId, {
+      role: "tool",
+      text: cta
+    });
+
+    // vrati objekt natrag klijentu
+    res.json({ solutionText, cta });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "solution_failed" });

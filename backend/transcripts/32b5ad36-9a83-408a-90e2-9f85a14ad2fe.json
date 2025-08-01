@@ -112,6 +112,79 @@
       "text": "bok",
       "mode": "chat",
       "t": 1754050223077
+    },
+    {
+      "role": "user",
+      "text": "hey",
+      "mode": "chat",
+      "t": 1754051758024
+    },
+    {
+      "role": "user",
+      "text": "hey",
+      "mode": "chat",
+      "t": 1754052897952
+    },
+    {
+      "role": "user",
+      "text": "hey",
+      "mode": "chat",
+      "t": 1754053368070
+    },
+    {
+      "role": "user",
+      "text": "hey",
+      "mode": "chat",
+      "ts": "2025-08-01T13:42:22.181Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T14:08:47.176Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T14:10:11.352Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T14:13:21.895Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T14:17:19.695Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T14:26:10.661Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T14:27:02.226Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T14:29:40.258Z"
     }
   ],
   "finished": true,

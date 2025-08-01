@@ -16,14 +16,27 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "localhost",
     port: 5173,
-    // Proxy API requests during development to the Express backend
     proxy: {
+      // HTTP API proxy
       "/api": {
-        // Forward API calls directly to the Express backend
         target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
-        // No rewrite here so "/api" is preserved when proxying requests
+        ws: true,
+      },
+      // WebSocket proxy for STT
+      "/stt": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      },
+      // WebSocket proxy for EVI
+      "/evi": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        secure: false,
+        ws: true,
       },
     },
   },

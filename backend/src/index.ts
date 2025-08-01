@@ -10,10 +10,20 @@ if (!process.env.OPENAI_API_KEY || !process.env.ELEVENLABS_API_KEY) {
   process.exit(1);
 }
 
+if (!process.env.HUME_API_KEY) {
+  console.error('❌ Missing HUME_API_KEY environment variable.');
+  process.exit(1);
+}
+
+const PORT = Number(process.env.PORT) || 3000;
 const server = http.createServer(app);
+
+// Attach Hume STT proxy
 attachSttProxy(server);
+
+// Attach EVI proxy
 attachEviProxy(server);
 
-server.listen(3000, () => {
-  console.log('✅ Backend listening on http://localhost:3000');
+server.listen(PORT, () => {
+  console.log(`✅ Backend listening on http://localhost:${PORT}`);
 });
