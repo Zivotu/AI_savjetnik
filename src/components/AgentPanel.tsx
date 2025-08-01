@@ -3,6 +3,7 @@ import { Play, MessageCircle, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
+import SolutionModal from "./SolutionModal";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
@@ -32,6 +33,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const [sending, setSending] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(() => localStorage.getItem("contactDone") === "yes");
+
+  const [solutionOpen, setSolutionOpen] = useState(false);
+  const [solutionTextState, setSolutionTextState] = useState("");
 
   const [phase, setPhase] = useState<"idle" | "intro" | "collect" | "closing" | "ended">("idle");
   const timer = useRef<NodeJS.Timeout>();
@@ -112,6 +116,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       }
       const sol = await solRes.json();
       const solutionText = `${sol.solutionText}\n${sol.cta}`;
+
+      setSolutionTextState(solutionText);
+      setSolutionOpen(true);
 
       await fetch("/api/agent", {
         method: "POST",
@@ -512,6 +519,12 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         open={contactOpen}
         onSave={handleSaveContact}
         onClose={() => setContactOpen(false)}
+      />
+      <SolutionModal
+        open={solutionOpen}
+        solution={solutionTextState}
+        language={language}
+        onClose={() => setSolutionOpen(false)}
       />
     </div>
   );
