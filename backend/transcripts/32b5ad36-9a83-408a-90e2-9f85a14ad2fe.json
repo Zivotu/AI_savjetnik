@@ -185,6 +185,19 @@
       "phase": "intro",
       "mode": "voice",
       "ts": "2025-08-01T14:29:40.258Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T16:22:59.253Z"
+    },
+    {
+      "role": "user",
+      "text": "hey",
+      "mode": "chat",
+      "ts": "2025-08-01T16:23:25.091Z"
     }
   ],
   "finished": true,
