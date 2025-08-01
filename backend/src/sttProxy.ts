@@ -24,7 +24,7 @@ export function attachSttProxy(server: HTTPServer) {
   server.on('upgrade', (req: IncomingMessage, socket: Socket, head: Buffer) => {
     if (req.url !== '/api/stt') return;
     wss.handleUpgrade(req, socket, head, (client: WebSocket) => {
-      const provider = process.env.STT_PROVIDER ?? 'hume';
+      const provider = process.env.STT_PROVIDER ?? 'elevenlabs';
 
       const upstream =
         provider === 'elevenlabs'

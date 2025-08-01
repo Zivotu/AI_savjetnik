@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-// Router for text-to-speech proxy. Switch provider via env TTS_PROVIDER=[hume|elevenlabs] (default hume)
+// Router for text-to-speech proxy. Switch provider via env TTS_PROVIDER=[hume|elevenlabs] (default elevenlabs)
 const router = (0, express_1.Router)();
 router.post('/', async (req, res) => {
     const { text, voiceId = process.env.ELEVENLABS_VOICE_ID, modelId = 'eleven_multilingual_v2' } = req.body;
@@ -10,7 +10,7 @@ router.post('/', async (req, res) => {
         return;
     }
     try {
-        const provider = process.env.TTS_PROVIDER ?? 'hume';
+        const provider = process.env.TTS_PROVIDER ?? 'elevenlabs';
         if (provider === 'hume') {
             const apiRes = await fetch('https://api.hume.ai/v0/tts/stream/file', {
                 method: 'POST',
