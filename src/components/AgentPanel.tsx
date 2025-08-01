@@ -64,6 +64,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       if (m.source !== "user") {
         setInterim(null);
       }
+      if (phase === "intro" && m.source === "user") {
+        setPhase("collect");
+      }
       setActiveSpeaker(m.source === "user" ? "user" : "agent");
       setMessages((prev) => [
         ...prev,
@@ -287,7 +290,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
     setActiveSpeaker("user");
 
-    setPhase("collect");
+    setPhase("intro");
     startAt.current = Date.now();
 
     // 2️⃣ zatraži mikrofon
@@ -302,7 +305,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     // 3️⃣ pokreni ElevenLabs WebRTC STT-TTS
     await startSession({
       agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
-      onConnect: () => {},
+      onConnect: () => {
+        setPhase("collect");
+      },
 
       connectionType: "webrtc",
     });
