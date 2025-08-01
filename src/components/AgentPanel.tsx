@@ -61,11 +61,16 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         },
       ]);
     },
-    onDebug: (d) => {
-      if ((d as any).type === "tentative_agent_response") {
-        setInterim({ type: "agent", text: (d as any).response, time: new Date().toLocaleTimeString() });
-      }
-    },
+    onDebug: (d: { type: string; response?: string }) => {
+  if (d.type === "tentative_agent_response" && d.response) {
+    setInterim({
+      type: "agent",
+      text: d.response,
+      time: new Date().toLocaleTimeString(),
+    });
+  }
+},
+
   });
 
   async function finalize() {

@@ -299,6 +299,13 @@
       "phase": "intro",
       "mode": "voice",
       "ts": "2025-08-01T19:19:35.910Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T21:18:33.573Z"
     }
   ],
   "finished": true,
