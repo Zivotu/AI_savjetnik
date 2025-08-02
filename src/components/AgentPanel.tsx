@@ -61,9 +61,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   const { startSession, sendUserMessage, sendUserActivity } = useConversation({
     onMessage: (m) => {
-      if (m.source !== "user") {
-        setInterim(null);
-      }
+      // clear any interim text once a final message is received
+      setInterim(null);
       if (phase === "intro" && m.source === "user") {
         setPhase("collect");
       }
@@ -96,14 +95,21 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       });
     },
     onDebug: (d: { type: string; response?: string }) => {
-  if (d.type === "tentative_agent_response" && d.response) {
-    setInterim({
-      type: "agent",
-      text: d.response,
-      time: new Date().toLocaleTimeString(),
-    });
-  }
-},
+      if (d.type === "tentative_agent_response" && d.response) {
+        setInterim({
+          type: "agent",
+          text: d.response,
+          time: new Date().toLocaleTimeString(),
+        });
+      }
+      if (d.type === "tentative_user_transcript" && d.response) {
+        setInterim({
+          type: "user",
+          text: d.response,
+          time: new Date().toLocaleTimeString(),
+        });
+      }
+    },
 
   });
 
