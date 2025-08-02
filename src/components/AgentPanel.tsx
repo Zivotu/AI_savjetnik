@@ -88,6 +88,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         });
       audioCtxRef.current = ctx;
 
+      if (!(data instanceof ArrayBuffer)) return; // safety-guard
+
       // pokušaj dekodirati, fallback ako ne uspije
       ctx
         .decodeAudioData(data.slice(0))
@@ -108,9 +110,29 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const { startSession, sendUserMessage, sendUserActivity } = useConversation({
     onMessage: handleMessage,
     onDebug: (d) => addDevLog("debug", d),
-    onAudio: (chunk) => {
-      console.log("[onAudio]", chunk.byteLength, "bytes");
-      playAudio(chunk);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onAudio: (packet: any) => {
+      // ⚠️ ElevenLabs preko WebSocketa katkad šalje “ping” frame ili JSON –
+      //    provjeri i pretvori u ArrayBuffer samo ako ima audio.
+      let buf: ArrayBuffer | null = null;
+
+      if (packet instanceof ArrayBuffer) {
+        buf = packet; // WebRTC varianta – sirovi PCM/Opus
+      } else if (packet?.audio) {
+        // { audio: "base64..." }  – WS varianta
+        const str = atob(packet.audio);
+        const arr = new Uint8Array(str.length);
+        for (let i = 0; i < str.length; i++) arr[i] = str.charCodeAt(i);
+        buf = arr.buffer;
+      }
+
+      if (buf) {
+        addDevLog("onAudio", `${buf.byteLength}B`);
+        playAudio(buf);
+      } else {
+        // tih paket ignoriramo da ne rušimo UI
+        addDevLog("onAudio", "⏭️ prazan paket");
+      }
     },
     onError: (e) => console.error("[conversation-error]", e),
     onConnect: () => console.log("[conversation] ✅ povezan"),
@@ -125,6 +147,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         const txt = evt.user_transcription_event?.user_transcript;
         if (txt) {
           setMessages((m) => [...m, { role: "user", text: txt }]);
+          addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
           setActiveSpeaker("user");
           fetch("/api/agent", {
             method: "POST",
@@ -146,6 +169,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         const txt = evt.agent_response_event?.agent_response;
         if (txt) {
           setMessages((m) => [...m, { role: "assistant", text: txt }]);
+          addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
           setActiveSpeaker("agent");
           fetch("/api/agent", {
             method: "POST",
@@ -171,6 +195,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               ? [...m.slice(0, -1), { ...m[m.length - 1], text: txt }]
               : m,
           );
+          addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
           setActiveSpeaker("agent");
         }
         break;
@@ -244,6 +269,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         ...prev,
         { role: "assistant", text: solutionText },
       ]);
+      addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
 
       const ttsRes = await fetch("/api/tts", {
         method: "POST",
@@ -467,6 +493,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
     const userTurn = { role: "user" as const, text: input.trim() };
     setMessages((prev) => [...prev, userTurn]);
+    addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
 
     await fetch("/api/agent", {
       method: "POST",
@@ -559,7 +586,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                         : "Agent"}
                     </span>
                   </div>
-                  <p className="text-sm text-foreground bg-white/40 rounded-lg p-3 animate-fade-in">
+                  <p className="text-sm text-black bg-white/90 rounded-lg p-3 animate-fade-in">
                     {message.text}
                   </p>
                 </div>
