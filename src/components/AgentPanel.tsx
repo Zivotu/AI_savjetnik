@@ -29,9 +29,9 @@ interface AgentPanelProps {
 
 const AgentPanel = ({ language }: AgentPanelProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [messages, setMessages] = useState<
-    Array<{ role: "user" | "assistant"; text: string }>
-  >([]);
+  type Message = { type: "user" | "agent"; text: string; time: string };
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [interim, setInterim] = useState<Message | null>(null);
   const [mode, setMode] = useState<"voice" | "chat">("voice");
   const [conversationId] = useState<string>(() => {
     const stored = localStorage.getItem("convId");
@@ -70,9 +70,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   // Web-Audio za ElevenLabs TTS
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const messagesRef = useRef<
-    Array<{ role: "user" | "assistant"; text: string }>
-  >([]);
+  const messagesRef = useRef<Message[]>([]);
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -107,110 +105,88 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onAudio = (packet: any) => {
+    // ⚠️ ElevenLabs preko WebSocketa katkad šalje “ping” frame ili JSON –
+    //    provjeri i pretvori u ArrayBuffer samo ako ima audio.
+    let buf: ArrayBuffer | null = null;
+
+    if (packet instanceof ArrayBuffer) {
+      buf = packet; // WebRTC varianta – sirovi PCM/Opus
+    } else if (packet?.audio) {
+      // { audio: "base64..." }  – WS varianta
+      const str = atob(packet.audio);
+      const arr = new Uint8Array(str.length);
+      for (let i = 0; i < str.length; i++) arr[i] = str.charCodeAt(i);
+      buf = arr.buffer;
+    }
+
+    if (buf) {
+      addDevLog("onAudio", `${buf.byteLength}B`);
+      playAudio(buf);
+    } else {
+      // tih paket ignoriramo da ne rušimo UI
+      addDevLog("onAudio", "⏭️ prazan paket");
+    }
+  };
+
   const { startSession, sendUserMessage, sendUserActivity } = useConversation({
-    onMessage: handleMessage,
-    onDebug: (d) => addDevLog("debug", d),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onAudio: (packet: any) => {
-      // ⚠️ ElevenLabs preko WebSocketa katkad šalje “ping” frame ili JSON –
-      //    provjeri i pretvori u ArrayBuffer samo ako ima audio.
-      let buf: ArrayBuffer | null = null;
+    onMessage: (m) => {
+      setInterim(null);
+      setPhase((p) => (p === "intro" && m.source === "user" ? "collect" : p));
+      setActiveSpeaker(m.source === "user" ? "user" : "agent");
 
-      if (packet instanceof ArrayBuffer) {
-        buf = packet; // WebRTC varianta – sirovi PCM/Opus
-      } else if (packet?.audio) {
-        // { audio: "base64..." }  – WS varianta
-        const str = atob(packet.audio);
-        const arr = new Uint8Array(str.length);
-        for (let i = 0; i < str.length; i++) arr[i] = str.charCodeAt(i);
-        buf = arr.buffer;
+      const msg: Message = {
+        type: m.source === "user" ? "user" : "agent",
+        text: m.message,
+        time: new Date().toLocaleTimeString(),
+      };
+      setMessages((prev) => [...prev, msg]);
+      addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
+
+      fetch("/api/agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId,
+          role: m.source === "user" ? "user" : "assistant",
+          text: m.message,
+          phase,
+          mode,
+        }),
+      }).catch((err) => {
+        console.error("Agent API request failed", err);
+      });
+    },
+    onDebug: (d) => {
+      addDevLog("debug", d);
+      if (d.type === "tentative_agent_response" && d.response) {
+        setInterim({
+          type: "agent",
+          text: d.response,
+          time: new Date().toLocaleTimeString(),
+        });
       }
-
-      if (buf) {
-        addDevLog("onAudio", `${buf.byteLength}B`);
-        playAudio(buf);
-      } else {
-        // tih paket ignoriramo da ne rušimo UI
-        addDevLog("onAudio", "⏭️ prazan paket");
+      if (d.type === "tentative_user_transcript" && d.response) {
+        setInterim({
+          type: "user",
+          text: d.response,
+          time: new Date().toLocaleTimeString(),
+        });
       }
     },
+    onAudio,
+    onConnect: () => setPhase("collect"),
+    onDisconnect: () => setActiveSpeaker(null),
     onError: (e) => console.error("[conversation-error]", e),
-    onConnect: () => console.log("[conversation] ✅ povezan"),
-    onDisconnect: () => console.log("[conversation] ❌ diskonekt"),
   });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function handleMessage(evt: any) {
-    addDevLog("onMessage", evt);
-    switch (evt.type) {
-      case "user_transcript": {
-        const txt = evt.user_transcription_event?.user_transcript;
-        if (txt) {
-          setMessages((m) => [...m, { role: "user", text: txt }]);
-          addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
-          setActiveSpeaker("user");
-          fetch("/api/agent", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              conversationId,
-              role: "user",
-              text: txt,
-              phase,
-              mode,
-            }),
-          }).catch((err) => {
-            console.error("Agent API request failed", err);
-          });
-        }
-        break;
-      }
-      case "agent_response": {
-        const txt = evt.agent_response_event?.agent_response;
-        if (txt) {
-          setMessages((m) => [...m, { role: "assistant", text: txt }]);
-          addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
-          setActiveSpeaker("agent");
-          fetch("/api/agent", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              conversationId,
-              role: "assistant",
-              text: txt,
-              phase,
-              mode,
-            }),
-          }).catch((err) => {
-            console.error("Agent API request failed", err);
-          });
-        }
-        break;
-      }
-      case "agent_response_correction": {
-        const txt = evt.agent_response_correction_event?.agent_response;
-        if (txt) {
-          setMessages((m) =>
-            m.length
-              ? [...m.slice(0, -1), { ...m[m.length - 1], text: txt }]
-              : m,
-          );
-          addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
-          setActiveSpeaker("agent");
-        }
-        break;
-      }
-      default:
-      // ignore
-    }
-  }
 
   async function finalize() {
     if (closingHandled.current) return;
     closingHandled.current = true;
 
     const transcript = messagesRef.current
-      .map((m) => `${m.role === "user" ? "User" : "Agent"}: ${m.text}`)
+      .map((m) => `${m.type === "user" ? "User" : "Agent"}: ${m.text}`)
       .join("\n");
 
     try {
@@ -267,7 +243,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", text: solutionText },
+        {
+          type: "agent",
+          text: solutionText,
+          time: new Date().toLocaleTimeString(),
+        },
       ]);
       addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
 
@@ -435,7 +415,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
       await startSession({
         agentId,
-        onConnect: () => setPhase("collect"),
         // connectionType maknut – prepusti SDK-u da auto-odabere (WebRTC/WebSocket).
       });
 
@@ -491,7 +470,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     if (!input.trim()) return;
     setSending(true);
 
-    const userTurn = { role: "user" as const, text: input.trim() };
+    const userTurn: Message = {
+      type: "user",
+      text: input.trim(),
+      time: new Date().toLocaleTimeString(),
+    };
     setMessages((prev) => [...prev, userTurn]);
     addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
 
@@ -569,7 +552,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               Transkript
             </h3>
           </div>
-          {phase === "collect" && (
+          {phase === "collect" && messages.length === 0 && (
             <p className="text-xs text-muted">🎙️ Snimamo…</p>
           )}
 
@@ -579,7 +562,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                 <div key={index} className="flex flex-col space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs font-medium">
-                      {message.role === "user"
+                      {message.type === "user"
                         ? language === "hr"
                           ? "Vi"
                           : "You"
@@ -591,6 +574,22 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                   </p>
                 </div>
               ))}
+              {interim && (
+                <div className="flex flex-col space-y-1 opacity-60">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-medium">
+                      {interim.type === "user"
+                        ? language === "hr"
+                          ? "Vi"
+                          : "You"
+                        : "Agent"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-black bg-white/90 rounded-lg p-3 animate-fade-in">
+                    {interim.text}
+                  </p>
+                </div>
+              )}
               <div ref={bottomRef} />
             </div>
           </div>
@@ -684,7 +683,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       {DEBUG && (
         <details className="mt-4 text-xs max-h-56 overflow-auto bg-neutral-900 text-white rounded p-2">
           <summary>Debug transkript</summary>
-          <pre>{messages.map((m) => `${m.role}: ${m.text}`).join("\n")}</pre>
+          <pre>{messages.map((m) => `${m.type}: ${m.text}`).join("\n")}</pre>
         </details>
       )}
     </div>
