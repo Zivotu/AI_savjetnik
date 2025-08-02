@@ -127,6 +127,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         return;
       }
       const sol = await solRes.json();
+      if (!sol.solutionText || !sol.cta) {
+        console.error("Solution API invalid response", sol);
+        toast.error("Greška pri rješenju");
+        return;
+      }
       const solutionText = `${sol.solutionText}\n${sol.cta}`;
 
       setSolutionTextState(solutionText);
