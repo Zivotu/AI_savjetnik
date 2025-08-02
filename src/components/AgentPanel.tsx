@@ -12,6 +12,7 @@ import SolutionModal from "./SolutionModal";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
+import agentImg from "@/../assets/agent_1.png";
 
 type Turn = { role: "user" | "assistant"; text: string; time: string };
 
@@ -69,6 +70,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const [contactSubmitted, setContactSubmitted] = useState(
     () => localStorage.getItem("contactDone") === "yes",
   );
+
+  const [avatarVisible, setAvatarVisible] = useState(false);
 
   const [solutionOpen, setSolutionOpen] = useState(false);
   const [solutionTextState, setSolutionTextState] = useState("");
@@ -207,7 +210,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     },
     onAudio,
     onConnect: () => setPhase("collect"),
-    onDisconnect: () => setActiveSpeaker(null),
+    onDisconnect: () => {
+      setActiveSpeaker(null);
+      setAvatarVisible(false);
+    },
     onError: (e) => console.error("[conversation-error]", e),
   });
 
@@ -312,24 +318,40 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     hr: {
       title: "U 90 sekundi do JEDNOG AI rješenja za vašu tvrtku.",
       subtitle:
-        "Primarno glasom, uz opciju chata. U ovom demou agent je samo vizualni prikaz.",
+        "Mi smo tim specijaliziran za AI savjetovanje i izgradnju konkretnih rješenja. Ovaj agent je samo uvod – pokazuje, na svom primjeru, kako umjetna inteligencija može olakšati poslovanje. Prikazana rješenja su brza, okvirna i služe za orijentaciju; za detaljne prijedloge preporučujemo izravan kontakt. Prvi odgovor na svaki upit, e-poštom, potpuno je besplatan.",
       startCall: "Pokreni razgovor",
       switchToChat: "Prebaci na chat",
       mute: "Mute",
-      privacy:
-        "Razgovor se snima i transkribira u produkciji. Ovo je demo bez snimanja.",
+      privacy: (
+        <>
+          Razgovor se snima i transkribira radi poboljšanja usluge; podaci se
+          čuvaju šifrirano i usklađeni su s GDPR-om.{' '}
+          <a className="underline" href="/privacy">
+            Detalji o obradi podataka
+          </a>
+          .
+        </>
+      ),
       learnMore: "Saznaj više",
       steps: ["Uvod", "Pitanja", "Rješenje"],
     },
     en: {
       title: "ONE AI solution for your company in 90 seconds.",
       subtitle:
-        "Primarily voice-based, with chat option. This demo shows only visual representation.",
+        "We are a team specialized in AI consulting and building concrete solutions. This agent is only an introduction – it demonstrates, through its own example, how artificial intelligence can simplify business operations. The presented solutions are quick, approximate, and serve for orientation; for detailed proposals we recommend direct contact. The first reply to every inquiry, by email, is completely free.",
       startCall: "Start conversation",
       switchToChat: "Switch to chat",
       mute: "Mute",
-      privacy:
-        "Conversation is recorded and transcribed in production. This is a demo without recording.",
+      privacy: (
+        <>
+          Conversation is recorded and transcribed to improve the service; data
+          is stored encrypted and compliant with GDPR.{' '}
+          <a className="underline" href="/privacy">
+            Details about data processing
+          </a>
+          .
+        </>
+      ),
       learnMore: "Learn more",
       steps: ["Intro", "Questions", "Solution"],
     },
@@ -443,8 +465,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      await startSession({ agentId: import.meta.env.VITE_ELEVEN_AGENT_ID });
+      await (startSession as unknown as any)({
+        agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
+      });
       setSessionActive(true);
+      setAvatarVisible(true);
 
       // 4️⃣ nakon timeouta finaliziraj
       timer.current = setTimeout(() => {
@@ -463,6 +488,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     eviPlayerRef.current?.stop?.();
     setSessionActive(false);
     setActiveSpeaker(null);
+    setAvatarVisible(false);
     setPhase("idle");
   }
 
@@ -530,8 +556,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   async function ensureSession() {
     if (!sessionActive && mode === "voice") {
-      await startSession({ agentId: import.meta.env.VITE_ELEVEN_AGENT_ID });
-      setSessionActive(true);
+    await (startSession as unknown as any)({
+      agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
+    });
+    setSessionActive(true);
+    setAvatarVisible(true);
     }
   }
 
@@ -546,14 +575,21 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                   className={`w-6 h-6 ${
                     activeSpeaker === "user" && mode === "voice"
                       ? "animate-pulse text-white"
-                      : "text-white/30"
+                      : "text-white"
                   }`}
                 />
                 <HeadphonesIcon
                   className={`w-6 h-6 ${
                     activeSpeaker === "agent" && mode === "voice"
                       ? "animate-pulse text-white"
-                      : "text-white/30"
+                      : "text-white"
+                  }`}
+                />
+                <img
+                  src={agentImg}
+                  alt="AI agent"
+                  className={`w-12 h-12 rounded-full ml-4 transition-opacity duration-500 ${
+                    avatarVisible ? "opacity-100" : "opacity-0"
                   }`}
                 />
               </div>
@@ -616,7 +652,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               <p
                 key={i}
                 className={`text-sm mb-1 ${
-                  m.role === "user" ? "text-white" : "text-sky-300"
+                  m.role === "user"
+                    ? "text-neutral-500"
+                    : "text-neutral-900"
                 }`}
               >
                 <TypeWriter text={m.text} />
@@ -688,7 +726,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
       {contactSubmitted && (
         <button
-          className="text-xs underline text-muted"
+          className="text-xs underline text-black"
           onClick={() => setContactOpen(true)}
         >
           Uredi kontakt
