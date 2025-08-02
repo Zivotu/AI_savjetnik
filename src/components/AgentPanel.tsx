@@ -76,6 +76,24 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           time: new Date().toLocaleTimeString(),
         },
       ]);
+      // log turn
+      fetch("/api/agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId,
+          role: m.source === "user" ? "user" : "assistant",
+          text: m.message,
+          phase,
+          mode
+        })
+      }).then(res => {
+        if (!res.ok) {
+          console.error("Agent API error", res.status, res.statusText);
+        }
+      }).catch(err => {
+        console.error("Agent API request failed", err);
+      });
     },
     onDebug: (d: { type: string; response?: string }) => {
   if (d.type === "tentative_agent_response" && d.response) {
