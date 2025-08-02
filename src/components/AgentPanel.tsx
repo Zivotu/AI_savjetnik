@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Play, MessageCircle, Mic, Headphones, Lightbulb } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Play, MessageCircle, Mic, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
@@ -8,13 +8,31 @@ import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
 
+function TypeWriter({ text }: { text: string }) {
+  const [shown, setShown] = useState("");
+  useEffect(() => {
+    let i = 0;
+    const id = setInterval(() => {
+      setShown(text.slice(0, ++i));
+      if (i >= text.length) clearInterval(id);
+    }, 20);
+    return () => clearInterval(id);
+  }, [text]);
+  return <span>{shown}</span>;
+}
+
+type ElevenMsg = {
+  type: "user" | "agent";
+  text: string;
+  time: string;
+};
+
 const COLLECT_TIMEOUT_MS =
   Number(import.meta.env.VITE_COLLECT_TIMEOUT_MS ?? "120000") || 120000;
 
 const DEBUG = import.meta.env.DEV;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addDevLog(tag: string, data: any) {
+function addDevLog(tag: string, data: unknown) {
   if (!DEBUG) return;
   if (data instanceof Error) {
     console.error(`[${tag}]`, data.message, data);
@@ -29,9 +47,8 @@ interface AgentPanelProps {
 
 const AgentPanel = ({ language }: AgentPanelProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  type Message = { type: "user" | "agent"; text: string; time: string };
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [interim, setInterim] = useState<Message | null>(null);
+  const [messages, setMessages] = useState<ElevenMsg[]>([]);
+  const [interim, setInterim] = useState<ElevenMsg | null>(null);
   const [mode, setMode] = useState<"voice" | "chat">("voice");
   const [conversationId] = useState<string>(() => {
     const stored = localStorage.getItem("convId");
@@ -64,13 +81,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const startAt = useRef(0);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const transcriptRef = useRef<HTMLDivElement | null>(null);
   const eviSocketRef = useRef<WebSocket | null>(null);
   const eviPlayerRef = useRef<EviWebAudioPlayer | null>(null);
   const closingHandled = useRef(false);
   // Web-Audio za ElevenLabs TTS
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const messagesRef = useRef<Message[]>([]);
+  const messagesRef = useRef<ElevenMsg[]>([]);
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -78,10 +96,16 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   function playAudio(data: ArrayBuffer) {
     try {
       // init ili uzmi postojeći kontekst
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const ctx =
         audioCtxRef.current ??
-        new (window.AudioContext || (window as any).webkitAudioContext)({
+        new (
+          window.AudioContext ||
+            (
+              window as unknown as {
+                webkitAudioContext: typeof AudioContext;
+              }
+            ).webkitAudioContext
+        )({
           sampleRate: 48_000,
         });
       audioCtxRef.current = ctx;
@@ -105,17 +129,21 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onAudio = (packet: any) => {
+  const onAudio = (packet: unknown) => {
     // ⚠️ ElevenLabs preko WebSocketa katkad šalje “ping” frame ili JSON –
     //    provjeri i pretvori u ArrayBuffer samo ako ima audio.
     let buf: ArrayBuffer | null = null;
 
     if (packet instanceof ArrayBuffer) {
       buf = packet; // WebRTC varianta – sirovi PCM/Opus
-    } else if (packet?.audio) {
+    } else if (
+      typeof packet === "object" &&
+      packet !== null &&
+      "audio" in packet &&
+      typeof (packet as { audio: unknown }).audio === "string"
+    ) {
       // { audio: "base64..." }  – WS varianta
-      const str = atob(packet.audio);
+      const str = atob((packet as { audio: string }).audio);
       const arr = new Uint8Array(str.length);
       for (let i = 0; i < str.length; i++) arr[i] = str.charCodeAt(i);
       buf = arr.buffer;
@@ -136,7 +164,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setPhase((p) => (p === "intro" && m.source === "user" ? "collect" : p));
       setActiveSpeaker(m.source === "user" ? "user" : "agent");
 
-      const msg: Message = {
+      const msg: ElevenMsg = {
         type: m.source === "user" ? "user" : "agent",
         text: m.message,
         time: new Date().toLocaleTimeString(),
@@ -326,7 +354,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   }, [phase]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length)
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
@@ -413,9 +442,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      await startSession({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (startSession as unknown as (cfg: any) => Promise<void>)({
         agentId,
-        // connectionType maknut – prepusti SDK-u da auto-odabere (WebRTC/WebSocket).
       });
 
       // 4️⃣ nakon timeouta finaliziraj
@@ -470,7 +499,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     if (!input.trim()) return;
     setSending(true);
 
-    const userTurn: Message = {
+    const userTurn: ElevenMsg = {
       type: "user",
       text: input.trim(),
       time: new Date().toLocaleTimeString(),
@@ -502,16 +531,21 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         <div className="flex flex-col justify-center space-y-6">
           <div className="flex justify-center mb-6">
             <div className="ai-orb w-24 h-24 shadow-glow relative">
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                {activeSpeaker === "user" && (
-                  <Mic className={`w-8 h-8 text-green-500`} />
-                )}
-                {activeSpeaker === "agent" && (
-                  <Headphones className={`w-8 h-8 text-green-500`} />
-                )}
-                {activeSpeaker === null && (
-                  <Lightbulb className="w-8 h-8 text-red-500" />
-                )}
+              <div className="absolute inset-0 flex items-center justify-center z-10 space-x-4">
+                <Mic
+                  className={
+                    activeSpeaker === "user"
+                      ? "w-8 h-8 animate-pulse text-primary"
+                      : "w-8 h-8 text-muted"
+                  }
+                />
+                <Headphones
+                  className={
+                    activeSpeaker === "agent"
+                      ? "w-8 h-8 animate-pulse text-primary"
+                      : "w-8 h-8 text-muted"
+                  }
+                />
               </div>
             </div>
           </div>
@@ -556,13 +590,16 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
             <p className="text-xs text-muted">🎙️ Snimamo…</p>
           )}
 
-          <div className="flex-1 bg-white/30 rounded-2xl p-4 overflow-y-auto">
+          <div
+            className="rounded-lg bg-muted/40 p-4 h-72 lg:h-80 overflow-y-auto"
+            ref={transcriptRef}
+          >
             <div className="space-y-3">
-              {messages.map((message, index) => (
+              {messages.map((m, index) => (
                 <div key={index} className="flex flex-col space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs font-medium">
-                      {message.type === "user"
+                      {m.type === "user"
                         ? language === "hr"
                           ? "Vi"
                           : "You"
@@ -570,7 +607,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                     </span>
                   </div>
                   <p className="text-sm text-black bg-white/90 rounded-lg p-3 animate-fade-in">
-                    {message.text}
+                    <TypeWriter text={m.text} />
                   </p>
                 </div>
               ))}
