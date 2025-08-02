@@ -13,13 +13,15 @@ const COLLECT_TIMEOUT_MS =
 
 const DEBUG = import.meta.env.DEV;
 
-const addDevLog = (tag: string, data: unknown) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function addDevLog(tag: string, data: any) {
   if (!DEBUG) return;
-  console.debug(
-    `[${tag}]`,
-    typeof data === "string" ? data : JSON.stringify(data)
-  );
-};
+  if (data instanceof Error) {
+    console.error(`[${tag}]`, data.message, data);
+  } else {
+    console.debug(`[${tag}]`, data);
+  }
+}
 
 interface AgentPanelProps {
   language: "hr" | "en";
@@ -73,13 +75,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     messagesRef.current = messages;
   }, [messages]);
 
-  const conv = useConversation({
+  const conversation = useConversation({
+    onConnect: () => addDevLog("onConnect", "spojeno ✅"),
+    onDisconnect: () => addDevLog("onDisconnect", "veza prekinuta ❌"),
     onMessage: handleMessage,
-    onDebug: d => addDevLog("onDebug", d),
     onError: e => addDevLog("onError", e),
   });
-  const convRef = useRef(conv);
-  convRef.current = conv;
+  const convRef = useRef(conversation);
+  convRef.current = conversation;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function handleMessage(evt: any) {
@@ -359,16 +362,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       await c.startSession({
         agentId: import.meta.env.VITE_ELEVEN_AGENT_ID!,
         connectionType: "webrtc",
-        overrides: {
-          client_events: [
-            "user_transcript",
-            "agent_response",
-            "agent_response_correction",
-          ],
-        },
+        // user_id: "optional-your-uuid"
       });
     } catch (err) {
-      addDevLog("startVoice-error", err);
+      addDevLog("startVoice-error", err as Error);
       alert("Nemoguće pokrenuti glasovni razgovor – vidi konzolu.");
       setPhase("idle");
       return;
@@ -438,7 +435,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       })
     });
 
-    conv.sendUserMessage(input.trim());
+    conversation.sendUserMessage(input.trim());
     setActiveSpeaker("user");
 
     setInput("");
@@ -529,7 +526,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                 value={input}
                 onChange={e => {
                   setInput(e.target.value);
-                  conv.sendUserActivity();
+                  conversation.sendUserActivity();
                 }}
                 disabled={mode !== "chat" || sending}
               />
