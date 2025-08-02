@@ -13,11 +13,12 @@ const COLLECT_TIMEOUT_MS =
 
 const DEBUG = import.meta.env.DEV;
 
-const addDevLog = (tag: string, data: any) => {
+const addDevLog = (tag: string, data: unknown) => {
   if (!DEBUG) return;
-  const text =
-    typeof data === "string" ? data : JSON.stringify(data).slice(0, 200);
-  console.debug(`[${tag}]`, text);
+  console.debug(
+    `[${tag}]`,
+    typeof data === "string" ? data : JSON.stringify(data)
+  );
 };
 
 interface AgentPanelProps {
@@ -72,69 +73,76 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     messagesRef.current = messages;
   }, [messages]);
 
-  const { conversation, sendUserMessage, sendUserActivity } = useConversation({
-    onMessage: (evt: any) => {
-      addDevLog("onMessage", evt);
-      switch (evt.type) {
-        case "user_transcript": {
-          const txt = evt.user_transcription_event?.user_transcript;
-          if (txt) {
-            setMessages(m => [...m, { role: "user", text: txt }]);
-            setActiveSpeaker("user");
-            fetch("/api/agent", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                conversationId,
-                role: "user",
-                text: txt,
-                phase,
-                mode,
-              }),
-            }).catch(err => {
-              console.error("Agent API request failed", err);
-            });
-          }
-          break;
-        }
-        case "agent_response": {
-          const txt = evt.agent_response_event?.agent_response;
-          if (txt) {
-            setMessages(m => [...m, { role: "assistant", text: txt }]);
-            setActiveSpeaker("agent");
-            fetch("/api/agent", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                conversationId,
-                role: "assistant",
-                text: txt,
-                phase,
-                mode,
-              }),
-            }).catch(err => {
-              console.error("Agent API request failed", err);
-            });
-          }
-          break;
-        }
-        case "agent_response_correction": {
-          const txt = evt.agent_response_correction_event?.agent_response;
-          if (txt) {
-            setMessages(m =>
-              m.length
-                ? [...m.slice(0, -1), { ...m[m.length - 1], text: txt }]
-                : m
-            );
-            setActiveSpeaker("agent");
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    },
+  const conv = useConversation({
+    onMessage: handleMessage,
+    onDebug: d => addDevLog("onDebug", d),
+    onError: e => addDevLog("onError", e),
   });
+  const convRef = useRef(conv);
+  convRef.current = conv;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleMessage(evt: any) {
+    addDevLog("onMessage", evt);
+    switch (evt.type) {
+      case "user_transcript": {
+        const txt = evt.user_transcription_event?.user_transcript;
+        if (txt) {
+          setMessages(m => [...m, { role: "user", text: txt }]);
+          setActiveSpeaker("user");
+          fetch("/api/agent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              conversationId,
+              role: "user",
+              text: txt,
+              phase,
+              mode,
+            }),
+          }).catch(err => {
+            console.error("Agent API request failed", err);
+          });
+        }
+        break;
+      }
+      case "agent_response": {
+        const txt = evt.agent_response_event?.agent_response;
+        if (txt) {
+          setMessages(m => [...m, { role: "assistant", text: txt }]);
+          setActiveSpeaker("agent");
+          fetch("/api/agent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              conversationId,
+              role: "assistant",
+              text: txt,
+              phase,
+              mode,
+            }),
+          }).catch(err => {
+            console.error("Agent API request failed", err);
+          });
+        }
+        break;
+      }
+      case "agent_response_correction": {
+        const txt = evt.agent_response_correction_event?.agent_response;
+        if (txt) {
+          setMessages(m =>
+            m.length
+              ? [...m.slice(0, -1), { ...m[m.length - 1], text: txt }]
+              : m
+          );
+          setActiveSpeaker("agent");
+        }
+        break;
+      }
+      default:
+      // ignore
+    }
+  }
 
   async function finalize() {
     if (closingHandled.current) return;
@@ -343,27 +351,28 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     setPhase("intro");
     startAt.current = Date.now();
 
-    // 2️⃣ zatraži mikrofon
+    // 2️⃣ zatraži mikrofon i pokreni ElevenLabs WebRTC STT-TTS
     try {
+      const c = convRef.current;
+      if (!c) throw new Error("Conversation hook nije inicijaliziran");
       await navigator.mediaDevices.getUserMedia({ audio: true });
+      await c.startSession({
+        agentId: import.meta.env.VITE_ELEVEN_AGENT_ID!,
+        connectionType: "webrtc",
+        overrides: {
+          client_events: [
+            "user_transcript",
+            "agent_response",
+            "agent_response_correction",
+          ],
+        },
+      });
     } catch (err) {
-      toast.error(language === "hr" ? "Mikrofon nije dostupan" : "Microphone access denied");
+      addDevLog("startVoice-error", err);
+      alert("Nemoguće pokrenuti glasovni razgovor – vidi konzolu.");
       setPhase("idle");
       return;
     }
-
-    // 3️⃣ pokreni ElevenLabs WebRTC STT-TTS
-    await conversation.startSession({
-      agentId: import.meta.env.VITE_ELEVEN_AGENT_ID!,
-      connectionType: "webrtc",
-      overrides: {
-        client_events: [
-          "user_transcript",
-          "agent_response",
-          "agent_response_correction",
-        ],
-      },
-    });
     setPhase("collect");
 
     // 4️⃣ nakon timeouta finaliziraj
@@ -429,7 +438,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       })
     });
 
-    sendUserMessage(input.trim());
+    conv.sendUserMessage(input.trim());
     setActiveSpeaker("user");
 
     setInput("");
@@ -520,7 +529,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                 value={input}
                 onChange={e => {
                   setInput(e.target.value);
-                  sendUserActivity();
+                  conv.sendUserActivity();
                 }}
                 disabled={mode !== "chat" || sending}
               />
@@ -591,11 +600,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         onClose={() => setSolutionOpen(false)}
       />
       {DEBUG && (
-        <textarea
-          readOnly
-          value={messages.map(x => `${x.role}: ${x.text}`).join("\n")}
-          className="w-full h-40 mt-4 text-xs bg-neutral-900 text-white p-2 rounded"
-        />
+        <details className="mt-4 text-xs max-h-56 overflow-auto bg-neutral-900 text-white rounded p-2">
+          <summary>Debug transkript</summary>
+          <pre>{messages.map(m => `${m.role}: ${m.text}`).join("\n")}</pre>
+        </details>
       )}
     </div>
   );
