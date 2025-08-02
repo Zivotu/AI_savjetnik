@@ -22,12 +22,9 @@ const Header = ({ language, onLanguageChange }: HeaderProps) => {
     <header className="sticky top-0 z-50 w-full glass border-b border-white/20 backdrop-blur-xl">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">AI</span>
-          </div>
+        <div className="flex items-center">
           <img
-            src="/assets/neurobiz_1.jpg"
+            src="/assets/NeuroBiz_Logo_1%20copy.png"
             alt="Neurobiz logo"
             className="h-8 w-auto"
           />
