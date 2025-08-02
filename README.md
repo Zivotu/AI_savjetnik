@@ -31,6 +31,7 @@ cd <YOUR_PROJECT_NAME>
 
 # Step 3: Install the necessary dependencies.
 npm i
+# This also installs dev dependencies needed for linting, such as `@eslint/js`.
 
 # Install backend dependencies (e.g., `ws`)
 cd backend
