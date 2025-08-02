@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, MessageCircle, Mic, Headphones } from "lucide-react";
+import {
+  Play,
+  MessageCircle,
+  Mic as MicIcon,
+  Headphones as HeadphonesIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
@@ -7,6 +12,8 @@ import SolutionModal from "./SolutionModal";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
+
+type Turn = { role: "user" | "assistant"; text: string; time: string };
 
 function TypeWriter({ text }: { text: string }) {
   const [shown, setShown] = useState("");
@@ -20,12 +27,6 @@ function TypeWriter({ text }: { text: string }) {
   }, [text]);
   return <span>{shown}</span>;
 }
-
-type ElevenMsg = {
-  type: "user" | "agent";
-  text: string;
-  time: string;
-};
 
 const COLLECT_TIMEOUT_MS =
   Number(import.meta.env.VITE_COLLECT_TIMEOUT_MS ?? "120000") || 120000;
@@ -47,9 +48,10 @@ interface AgentPanelProps {
 
 const AgentPanel = ({ language }: AgentPanelProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [messages, setMessages] = useState<ElevenMsg[]>([]);
-  const [interim, setInterim] = useState<ElevenMsg | null>(null);
+  const [messages, setMessages] = useState<Turn[]>([]);
+  const [interim, setInterim] = useState<Turn | null>(null);
   const [mode, setMode] = useState<"voice" | "chat">("voice");
+  const [sessionActive, setSessionActive] = useState(false);
   const [conversationId] = useState<string>(() => {
     const stored = localStorage.getItem("convId");
     if (stored) return stored;
@@ -80,15 +82,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const timer = useRef<NodeJS.Timeout>();
   const startAt = useRef(0);
 
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const transcriptRef = useRef<HTMLDivElement | null>(null);
+  const transcriptRef = useRef<HTMLDivElement>(null);
   const eviSocketRef = useRef<WebSocket | null>(null);
   const eviPlayerRef = useRef<EviWebAudioPlayer | null>(null);
   const closingHandled = useRef(false);
   // Web-Audio za ElevenLabs TTS
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const messagesRef = useRef<ElevenMsg[]>([]);
+  const messagesRef = useRef<Turn[]>([]);
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -130,6 +131,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   }
 
   const onAudio = (packet: unknown) => {
+    if (mode === "chat") return;
     // ⚠️ ElevenLabs preko WebSocketa katkad šalje “ping” frame ili JSON –
     //    provjeri i pretvori u ArrayBuffer samo ako ima audio.
     let buf: ArrayBuffer | null = null;
@@ -164,8 +166,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setPhase((p) => (p === "intro" && m.source === "user" ? "collect" : p));
       setActiveSpeaker(m.source === "user" ? "user" : "agent");
 
-      const msg: ElevenMsg = {
-        type: m.source === "user" ? "user" : "agent",
+      const msg: Turn = {
+        role: m.source === "user" ? "user" : "assistant",
         text: m.message,
         time: new Date().toLocaleTimeString(),
       };
@@ -190,14 +192,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       addDevLog("debug", d);
       if (d.type === "tentative_agent_response" && d.response) {
         setInterim({
-          type: "agent",
+          role: "assistant",
           text: d.response,
           time: new Date().toLocaleTimeString(),
         });
       }
       if (d.type === "tentative_user_transcript" && d.response) {
         setInterim({
-          type: "user",
+          role: "user",
           text: d.response,
           time: new Date().toLocaleTimeString(),
         });
@@ -214,7 +216,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     closingHandled.current = true;
 
     const transcript = messagesRef.current
-      .map((m) => `${m.type === "user" ? "User" : "Agent"}: ${m.text}`)
+      .map((m) => `${m.role === "user" ? "User" : "Agent"}: ${m.text}`)
       .join("\n");
 
     try {
@@ -272,7 +274,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setMessages((prev) => [
         ...prev,
         {
-          type: "agent",
+          role: "assistant",
           text: solutionText,
           time: new Date().toLocaleTimeString(),
         },
@@ -354,9 +356,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   }, [phase]);
 
   useEffect(() => {
-    if (messages.length)
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const el = transcriptRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, interim]);
 
   useEffect(() => {
     return () => {
@@ -437,15 +439,12 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
     setPhase("intro");
     startAt.current = Date.now();
-    const agentId = import.meta.env.VITE_ELEVEN_AGENT_ID!;
 
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (startSession as unknown as (cfg: any) => Promise<void>)({
-        agentId,
-      });
+      await startSession({ agentId: import.meta.env.VITE_ELEVEN_AGENT_ID });
+      setSessionActive(true);
 
       // 4️⃣ nakon timeouta finaliziraj
       timer.current = setTimeout(() => {
@@ -457,6 +456,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       alert("Nemoguće pokrenuti glasovni razgovor – vidi konzolu.");
       setPhase("idle");
     }
+  }
+
+  function stopVoice() {
+    eviSocketRef.current?.close();
+    eviPlayerRef.current?.stop?.();
+    setSessionActive(false);
+    setActiveSpeaker(null);
+    setPhase("idle");
   }
 
   async function handleConsent() {
@@ -494,36 +501,39 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     setContactOpen(false);
   }
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  async function handleChatSubmit(value: string) {
+    if (!value.trim()) return;
     setSending(true);
+    const ts = new Date().toLocaleTimeString();
+    setMessages((prev) => [...prev, { role: "user", text: value, time: ts }]);
 
-    const userTurn: ElevenMsg = {
-      type: "user",
-      text: input.trim(),
-      time: new Date().toLocaleTimeString(),
-    };
-    setMessages((prev) => [...prev, userTurn]);
-    addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
-
-    await fetch("/api/agent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        conversationId,
-        role: "user",
-        text: input.trim(),
-        mode: "chat",
-      }),
-    });
-
-    sendUserMessage(input.trim());
-    setActiveSpeaker("user");
-
-    setInput("");
+    if (mode === "voice") {
+      await ensureSession();
+      sendUserMessage(value);
+    } else {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: value }),
+      }).then((r) => r.json());
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text: res.answer,
+          time: new Date().toLocaleTimeString(),
+        },
+      ]);
+    }
     setSending(false);
-  };
+  }
+
+  async function ensureSession() {
+    if (!sessionActive && mode === "voice") {
+      await startSession({ agentId: import.meta.env.VITE_ELEVEN_AGENT_ID });
+      setSessionActive(true);
+    }
+  }
 
   return (
     <div className="glass-strong rounded-3xl p-8 shadow-medium h-full">
@@ -532,19 +542,19 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           <div className="flex justify-center mb-6">
             <div className="ai-orb w-24 h-24 shadow-glow relative">
               <div className="absolute inset-0 flex items-center justify-center z-10 space-x-4">
-                <Mic
-                  className={
-                    activeSpeaker === "user"
-                      ? "w-8 h-8 animate-pulse text-primary"
-                      : "w-8 h-8 text-muted"
-                  }
+                <MicIcon
+                  className={`w-6 h-6 ${
+                    activeSpeaker === "user" && mode === "voice"
+                      ? "animate-pulse text-white"
+                      : "text-white/30"
+                  }`}
                 />
-                <Headphones
-                  className={
-                    activeSpeaker === "agent"
-                      ? "w-8 h-8 animate-pulse text-primary"
-                      : "w-8 h-8 text-muted"
-                  }
+                <HeadphonesIcon
+                  className={`w-6 h-6 ${
+                    activeSpeaker === "agent" && mode === "voice"
+                      ? "animate-pulse text-white"
+                      : "text-white/30"
+                  }`}
                 />
               </div>
             </div>
@@ -572,7 +582,15 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
             <button
               className="flex items-center justify-center space-x-2 bg-white/50 text-foreground px-4 py-3 rounded-xl font-medium border border-white/30 hover:bg-white/70 transition-smooth"
               data-evt="agent_switch_chat"
-              onClick={() => setMode("chat")}
+              onClick={() => {
+                if (mode === "voice") {
+                  stopVoice();
+                  setMode("chat");
+                } else {
+                  setMode("voice");
+                  startVoice();
+                }
+              }}
             >
               <MessageCircle className="w-4 h-4" />
               <span>{currentTexts.switchToChat}</span>
@@ -587,53 +605,36 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
             </h3>
           </div>
           {phase === "collect" && messages.length === 0 && (
-            <p className="text-xs text-muted">🎙️ Snimamo…</p>
+            <p className="text-xs opacity-60">🎙️ Snimamo…</p>
           )}
 
           <div
-            className="rounded-lg bg-muted/40 p-4 h-72 lg:h-80 overflow-y-auto"
+            className="h-72 lg:h-80 overflow-y-auto rounded-lg"
             ref={transcriptRef}
           >
-            <div className="space-y-3">
-              {messages.map((m, index) => (
-                <div key={index} className="flex flex-col space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium">
-                      {m.type === "user"
-                        ? language === "hr"
-                          ? "Vi"
-                          : "You"
-                        : "Agent"}
-                    </span>
-                  </div>
-                  <p className="text-sm text-black bg-white/90 rounded-lg p-3 animate-fade-in">
-                    <TypeWriter text={m.text} />
-                  </p>
-                </div>
-              ))}
-              {interim && (
-                <div className="flex flex-col space-y-1 opacity-60">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium">
-                      {interim.type === "user"
-                        ? language === "hr"
-                          ? "Vi"
-                          : "You"
-                        : "Agent"}
-                    </span>
-                  </div>
-                  <p className="text-sm text-black bg-white/90 rounded-lg p-3 animate-fade-in">
-                    {interim.text}
-                  </p>
-                </div>
-              )}
-              <div ref={bottomRef} />
-            </div>
+            {messages.map((m, i) => (
+              <p
+                key={i}
+                className={`text-sm mb-1 ${
+                  m.role === "user" ? "text-white" : "text-sky-300"
+                }`}
+              >
+                <TypeWriter text={m.text} />
+              </p>
+            ))}
+            {interim && (
+              <p className="text-xs italic opacity-60">{interim.text}</p>
+            )}
           </div>
 
           {mode === "chat" && (
             <form
-              onSubmit={onSubmit}
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!input.trim()) return;
+                handleChatSubmit(input.trim());
+                setInput("");
+              }}
               className="mt-4 flex items-center space-x-2"
             >
               <input
@@ -720,7 +721,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       {DEBUG && (
         <details className="mt-4 text-xs max-h-56 overflow-auto bg-neutral-900 text-white rounded p-2">
           <summary>Debug transkript</summary>
-          <pre>{messages.map((m) => `${m.type}: ${m.text}`).join("\n")}</pre>
+          <pre>{messages.map((m) => `${m.role}: ${m.text}`).join("\n")}</pre>
         </details>
       )}
     </div>
