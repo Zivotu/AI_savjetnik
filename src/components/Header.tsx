@@ -26,9 +26,11 @@ const Header = ({ language, onLanguageChange }: HeaderProps) => {
           <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">AI</span>
           </div>
-          <span className="text-xl font-semibold text-foreground">
-            {texts[language].logo}
-          </span>
+          <img
+            src="/assets/neurobiz_1.jpg"
+            alt="Neurobiz logo"
+            className="h-8 w-auto"
+          />
         </div>
 
         {/* Right side - Question, Language switch and contact */}
