@@ -354,22 +354,42 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     setPhase("intro");
     startAt.current = Date.now();
 
-    // 2️⃣ zatraži mikrofon i pokreni ElevenLabs WebRTC STT-TTS
-    try {
-      const c = convRef.current;
-      if (!c) throw new Error("Conversation hook nije inicijaliziran");
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      await c.startSession({
-        agentId: import.meta.env.VITE_ELEVEN_AGENT_ID!,
-        connectionType: "webrtc",
-        // user_id: "optional-your-uuid"
-      });
-    } catch (err) {
-      addDevLog("startVoice-error", err as Error);
+    const c = convRef.current;
+    if (!c) {
+      const err = new Error("Conversation hook nije inicijaliziran");
+      addDevLog("startVoice-error", err);
       alert("Nemoguće pokrenuti glasovni razgovor – vidi konzolu.");
       setPhase("idle");
       return;
     }
+
+    const agentId = import.meta.env.VITE_ELEVEN_AGENT_ID!;
+
+    // 2️⃣ zatraži mikrofon i pokreni ElevenLabs STT-TTS (WebRTC uz WebSocket fallback)
+    try {
+      // tražimo mic dozvolu – ovo baci grešku ako je blokirano
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // ① Pokušaj WebRTC (bolja kvaliteta)
+      await c.startSession({ agentId, connectionType: "webrtc" });
+      addDevLog("startVoice", "WebRTC spojeno ✅");
+    } catch (webrtcErr) {
+      addDevLog("webrtc-failed", webrtcErr as Error);
+
+      try {
+        // ② Fallback na WebSocket
+        await c.startSession({ agentId, connectionType: "websocket" });
+        addDevLog("startVoice", "WebSocket spojeno ✅");
+      } catch (wsErr) {
+        addDevLog("websocket-failed", wsErr as Error);
+        alert(
+          "Ne mogu se spojiti na ElevenLabs (WebRTC ni WebSocket). Provjeri mrežu ili kontaktiraj podršku."
+        );
+        setPhase("idle");
+        return;
+      }
+    }
+
     setPhase("collect");
 
     // 4️⃣ nakon timeouta finaliziraj
