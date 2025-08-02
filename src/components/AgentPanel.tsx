@@ -1,12 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  Play,
-  MessageCircle,
-  VolumeX,
-  Mic,
-  Headphones,
-  Lightbulb,
-} from "lucide-react";
+import { Play, MessageCircle, Mic, Headphones, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
@@ -18,16 +11,24 @@ import { toast } from "@/components/ui/sonner";
 const COLLECT_TIMEOUT_MS =
   Number(import.meta.env.VITE_COLLECT_TIMEOUT_MS ?? "120000") || 120000;
 
+const DEBUG = import.meta.env.DEV;
+
+const addDevLog = (tag: string, data: any) => {
+  if (!DEBUG) return;
+  const text =
+    typeof data === "string" ? data : JSON.stringify(data).slice(0, 200);
+  console.debug(`[${tag}]`, text);
+};
+
 interface AgentPanelProps {
   language: "hr" | "en";
 }
 
 const AgentPanel = ({ language }: AgentPanelProps) => {
-  const DEBUG = import.meta.env.DEV;
-  const [debugLines, setDebugLines] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
-  const [messages, setMessages] = useState<Array<{ type: "agent" | "user"; text: string; time: string }>>([]);
-  const [interim, setInterim] = useState<{ type: "agent" | "user"; text: string; time: string } | null>(null);
+  const [messages, setMessages] = useState<
+    Array<{ role: "user" | "assistant"; text: string }>
+  >([]);
   const [mode, setMode] = useState<"voice" | "chat">("voice");
   const [conversationId] = useState<string>(() => {
     const stored = localStorage.getItem("convId");
@@ -37,17 +38,25 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     return id;
   });
   const [gdprOpen, setGdprOpen] = useState(false);
-  const [consentGiven, setConsentGiven] = useState(() => localStorage.getItem("consent") === "yes");
+  const [consentGiven, setConsentGiven] = useState(() =>
+    localStorage.getItem("consent") === "yes"
+  );
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
-  const [contactSubmitted, setContactSubmitted] = useState(() => localStorage.getItem("contactDone") === "yes");
+  const [contactSubmitted, setContactSubmitted] = useState(() =>
+    localStorage.getItem("contactDone") === "yes"
+  );
 
   const [solutionOpen, setSolutionOpen] = useState(false);
   const [solutionTextState, setSolutionTextState] = useState("");
 
-  const [phase, setPhase] = useState<"idle" | "intro" | "collect" | "closing" | "ended">("idle");
-  const [activeSpeaker, setActiveSpeaker] = useState<"user" | "agent" | null>(null);
+  const [phase, setPhase] = useState<
+    "idle" | "intro" | "collect" | "closing" | "ended"
+  >("idle");
+  const [activeSpeaker, setActiveSpeaker] = useState<"user" | "agent" | null>(
+    null
+  );
   const timer = useRef<NodeJS.Timeout>();
   const startAt = useRef(0);
 
@@ -56,99 +65,75 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const eviPlayerRef = useRef<EviWebAudioPlayer | null>(null);
   const closingHandled = useRef(false);
 
-  const messagesRef = useRef<Array<{ type: "agent" | "user"; text: string; time: string }>>([]);
+  const messagesRef = useRef<Array<{ role: "user" | "assistant"; text: string }>>(
+    []
+  );
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
-  function addLog(tag: string, data: any) {
-    if (!DEBUG) return;
-    setDebugLines(p => [
-      ...p.slice(-299),
-      `${new Date().toLocaleTimeString()} [${tag}] ${
-        typeof data === "string"
-          ? data.slice(0, 180)
-          : data instanceof ArrayBuffer
-            ? `binary ${data.byteLength}B`
-            : JSON.stringify(data).slice(0, 180)
-      }`
-    ]);
-    /* eslint-disable no-console */
-    console.log(tag, data);
-  }
-
-  // 1️⃣  WebSocket patch – samo jednom
-  if (DEBUG && !(window as any).__wsDebugPatched) {
-    (window as any).__wsDebugPatched = true;
-    const OrigWS = window.WebSocket;
-    // @ts-ignore
-    window.WebSocket = function (...args) {
-      const ws = new OrigWS(...args);
-      ws.addEventListener("message", e => addLog("WS-recv", e.data));
-      const origSend = ws.send.bind(ws);
-      ws.send = (d: any) => { addLog("WS-send", d); origSend(d); };
-      return ws;
-    };
-  }
-
-  const { startSession, sendUserMessage, sendUserActivity } = useConversation({
-    onMessage: (m) => {
-      addLog("onMessage", m);
-      // clear any interim text once a final message is received
-      setInterim(null);
-      if (phase === "intro" && m.source === "user") {
-        setPhase("collect");
-      }
-      setActiveSpeaker(m.source === "user" ? "user" : "agent");
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: m.source === "user" ? "user" : "agent",
-          text: m.message,
-          time: new Date().toLocaleTimeString(),
-        },
-      ]);
-      // log turn
-      fetch("/api/agent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversationId,
-          role: m.source === "user" ? "user" : "assistant",
-          text: m.message,
-          phase,
-          mode
-        })
-      }).then(res => {
-        if (!res.ok) {
-          console.error("Agent API error", res.status, res.statusText);
+  const { conversation, sendUserMessage, sendUserActivity } = useConversation({
+    onMessage: (evt: any) => {
+      addDevLog("onMessage", evt);
+      switch (evt.type) {
+        case "user_transcript": {
+          const txt = evt.user_transcription_event?.user_transcript;
+          if (txt) {
+            setMessages(m => [...m, { role: "user", text: txt }]);
+            setActiveSpeaker("user");
+            fetch("/api/agent", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                conversationId,
+                role: "user",
+                text: txt,
+                phase,
+                mode,
+              }),
+            }).catch(err => {
+              console.error("Agent API request failed", err);
+            });
+          }
+          break;
         }
-      }).catch(err => {
-        console.error("Agent API request failed", err);
-      });
-    },
-    onDebug: (d: { type: string; response?: string }) => {
-      addLog("onDebug", d);
-      if (d.type === "tentative_agent_response" && d.response) {
-        setInterim({
-          type: "agent",
-          text: d.response,
-          time: new Date().toLocaleTimeString(),
-        });
+        case "agent_response": {
+          const txt = evt.agent_response_event?.agent_response;
+          if (txt) {
+            setMessages(m => [...m, { role: "assistant", text: txt }]);
+            setActiveSpeaker("agent");
+            fetch("/api/agent", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                conversationId,
+                role: "assistant",
+                text: txt,
+                phase,
+                mode,
+              }),
+            }).catch(err => {
+              console.error("Agent API request failed", err);
+            });
+          }
+          break;
+        }
+        case "agent_response_correction": {
+          const txt = evt.agent_response_correction_event?.agent_response;
+          if (txt) {
+            setMessages(m =>
+              m.length
+                ? [...m.slice(0, -1), { ...m[m.length - 1], text: txt }]
+                : m
+            );
+            setActiveSpeaker("agent");
+          }
+          break;
+        }
+        default:
+          break;
       }
-      if (d.type === "tentative_user_transcript" && d.response) {
-        setInterim({
-          type: "user",
-          text: d.response,
-          time: new Date().toLocaleTimeString(),
-        });
-      }
     },
-
-    onError: (err) => {
-      addLog("onError", err);
-    },
-
   });
 
   async function finalize() {
@@ -156,7 +141,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     closingHandled.current = true;
 
     const transcript = messagesRef.current
-      .map(m => `${m.type === "user" ? "User" : "Agent"}: ${m.text}`)
+      .map(m => `${m.role === "user" ? "User" : "Agent"}: ${m.text}`)
       .join("\n");
 
     try {
@@ -211,10 +196,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         })
       });
 
-      setMessages(prev => [
-        ...prev,
-        { type: "agent", text: solutionText, time: new Date().toLocaleTimeString() }
-      ]);
+      setMessages(prev => [...prev, { role: "assistant", text: solutionText }]);
 
       const ttsRes = await fetch("/api/tts", {
         method: "POST",
@@ -371,16 +353,18 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     }
 
     // 3️⃣ pokreni ElevenLabs WebRTC STT-TTS
-    await startSession({
-      agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
-      onConnect: () => {
-        setPhase("collect");
-      },
-
+    await conversation.startSession({
+      agentId: import.meta.env.VITE_ELEVEN_AGENT_ID!,
       connectionType: "webrtc",
+      overrides: {
+        client_events: [
+          "user_transcript",
+          "agent_response",
+          "agent_response_correction",
+        ],
+      },
     });
-
-
+    setPhase("collect");
 
     // 4️⃣ nakon timeouta finaliziraj
     timer.current = setTimeout(() => {
@@ -431,7 +415,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     if (!input.trim()) return;
     setSending(true);
 
-    const userTurn = { type: "user" as const, text: input.trim(), time: new Date().toLocaleTimeString() };
+    const userTurn = { role: "user" as const, text: input.trim() };
     setMessages(prev => [...prev, userTurn]);
 
     await fetch("/api/agent", {
@@ -516,28 +500,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                 <div key={index} className="flex flex-col space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs font-medium">
-                      {message.type === "user" ? (language === "hr" ? "Vi" : "You") : "Agent"}
+                      {message.role === "user" ? (language === "hr" ? "Vi" : "You") : "Agent"}
                     </span>
-                    <span className="text-xs text-muted-foreground">{message.time}</span>
                   </div>
                   <p className="text-sm text-foreground bg-white/40 rounded-lg p-3 animate-fade-in">
                     {message.text}
                   </p>
                 </div>
               ))}
-              {interim && (
-                <div className="flex flex-col space-y-1" key="interim">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium">
-                      {interim.type === "user" ? (language === "hr" ? "Vi" : "You") : "Agent"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{interim.time}</span>
-                  </div>
-                  <p className="text-sm text-foreground bg-white/40 rounded-lg p-3 italic opacity-70 animate-fade-in">
-                    {interim.text}
-                  </p>
-                </div>
-              )}
               <div ref={bottomRef} />
             </div>
           </div>
@@ -621,10 +591,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         onClose={() => setSolutionOpen(false)}
       />
       {DEBUG && (
-        <details className="mt-4 text-xs max-h-56 overflow-auto bg-black/80 text-white rounded p-2">
-          <summary>Debug ({debugLines.length})</summary>
-          <pre className="whitespace-pre-wrap">{debugLines.join('\n')}</pre>
-        </details>
+        <textarea
+          readOnly
+          value={messages.map(x => `${x.role}: ${x.text}`).join("\n")}
+          className="w-full h-40 mt-4 text-xs bg-neutral-900 text-white p-2 rounded"
+        />
       )}
     </div>
   );
