@@ -306,6 +306,69 @@
       "phase": "intro",
       "mode": "voice",
       "ts": "2025-08-01T21:18:33.573Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T22:14:46.630Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T22:53:53.860Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T22:57:09.887Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T23:00:27.416Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T23:16:36.322Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T23:20:23.189Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-01T23:25:28.742Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-02T00:12:59.373Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-02T00:32:06.706Z"
     }
   ],
   "finished": true,
