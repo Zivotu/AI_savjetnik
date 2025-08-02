@@ -41,14 +41,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     return id;
   });
   const [gdprOpen, setGdprOpen] = useState(false);
-  const [consentGiven, setConsentGiven] = useState(() =>
-    localStorage.getItem("consent") === "yes"
+  const [consentGiven, setConsentGiven] = useState(
+    () => localStorage.getItem("consent") === "yes",
   );
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
-  const [contactSubmitted, setContactSubmitted] = useState(() =>
-    localStorage.getItem("contactDone") === "yes"
+  const [contactSubmitted, setContactSubmitted] = useState(
+    () => localStorage.getItem("contactDone") === "yes",
   );
 
   const [solutionOpen, setSolutionOpen] = useState(false);
@@ -58,7 +58,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     "idle" | "intro" | "collect" | "closing" | "ended"
   >("idle");
   const [activeSpeaker, setActiveSpeaker] = useState<"user" | "agent" | null>(
-    null
+    null,
   );
   const timer = useRef<NodeJS.Timeout>();
   const startAt = useRef(0);
@@ -67,22 +67,55 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const eviSocketRef = useRef<WebSocket | null>(null);
   const eviPlayerRef = useRef<EviWebAudioPlayer | null>(null);
   const closingHandled = useRef(false);
+  // Web-Audio za ElevenLabs TTS
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
-  const messagesRef = useRef<Array<{ role: "user" | "assistant"; text: string }>>(
-    []
-  );
+  const messagesRef = useRef<
+    Array<{ role: "user" | "assistant"; text: string }>
+  >([]);
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
-  const conversation = useConversation({
-    onConnect: () => addDevLog("onConnect", "spojeno ✅"),
-    onDisconnect: () => addDevLog("onDisconnect", "veza prekinuta ❌"),
+  function playAudio(data: ArrayBuffer) {
+    try {
+      // init ili uzmi postojeći kontekst
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ctx =
+        audioCtxRef.current ??
+        new (window.AudioContext || (window as any).webkitAudioContext)({
+          sampleRate: 48_000,
+        });
+      audioCtxRef.current = ctx;
+
+      // pokušaj dekodirati, fallback ako ne uspije
+      ctx
+        .decodeAudioData(data.slice(0))
+        .then((buf) => {
+          const src = ctx.createBufferSource();
+          src.buffer = buf;
+          src.connect(ctx.destination);
+          src.start();
+        })
+        .catch((err) => {
+          console.warn("[decodeAudioError]", err);
+        });
+    } catch (err) {
+      console.error("[playAudio failed]", err);
+    }
+  }
+
+  const { startSession, sendUserMessage, sendUserActivity } = useConversation({
     onMessage: handleMessage,
-    onError: e => addDevLog("onError", e),
+    onDebug: (d) => addDevLog("debug", d),
+    onAudio: (chunk) => {
+      console.log("[onAudio]", chunk.byteLength, "bytes");
+      playAudio(chunk);
+    },
+    onError: (e) => console.error("[conversation-error]", e),
+    onConnect: () => console.log("[conversation] ✅ povezan"),
+    onDisconnect: () => console.log("[conversation] ❌ diskonekt"),
   });
-  const convRef = useRef(conversation);
-  convRef.current = conversation;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function handleMessage(evt: any) {
@@ -91,7 +124,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       case "user_transcript": {
         const txt = evt.user_transcription_event?.user_transcript;
         if (txt) {
-          setMessages(m => [...m, { role: "user", text: txt }]);
+          setMessages((m) => [...m, { role: "user", text: txt }]);
           setActiveSpeaker("user");
           fetch("/api/agent", {
             method: "POST",
@@ -103,7 +136,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               phase,
               mode,
             }),
-          }).catch(err => {
+          }).catch((err) => {
             console.error("Agent API request failed", err);
           });
         }
@@ -112,7 +145,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       case "agent_response": {
         const txt = evt.agent_response_event?.agent_response;
         if (txt) {
-          setMessages(m => [...m, { role: "assistant", text: txt }]);
+          setMessages((m) => [...m, { role: "assistant", text: txt }]);
           setActiveSpeaker("agent");
           fetch("/api/agent", {
             method: "POST",
@@ -124,7 +157,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               phase,
               mode,
             }),
-          }).catch(err => {
+          }).catch((err) => {
             console.error("Agent API request failed", err);
           });
         }
@@ -133,10 +166,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       case "agent_response_correction": {
         const txt = evt.agent_response_correction_event?.agent_response;
         if (txt) {
-          setMessages(m =>
+          setMessages((m) =>
             m.length
               ? [...m.slice(0, -1), { ...m[m.length - 1], text: txt }]
-              : m
+              : m,
           );
           setActiveSpeaker("agent");
         }
@@ -152,7 +185,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     closingHandled.current = true;
 
     const transcript = messagesRef.current
-      .map(m => `${m.role === "user" ? "User" : "Agent"}: ${m.text}`)
+      .map((m) => `${m.role === "user" ? "User" : "Agent"}: ${m.text}`)
       .join("\n");
 
     try {
@@ -160,9 +193,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-conversation-id": conversationId
+          "x-conversation-id": conversationId,
         },
-        body: JSON.stringify({ transcript, language })
+        body: JSON.stringify({ transcript, language }),
       });
       if (!sumRes.ok) {
         console.error("Summary API error", sumRes.status, sumRes.statusText);
@@ -175,9 +208,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-conversation-id": conversationId
+          "x-conversation-id": conversationId,
         },
-        body: JSON.stringify({ summary, language })
+        body: JSON.stringify({ summary, language }),
       });
       if (!solRes.ok) {
         console.error("Solution API error", solRes.status, solRes.statusText);
@@ -203,16 +236,19 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           role: "assistant",
           text: solutionText,
           phase: "closing",
-          mode: "voice"
-        })
+          mode: "voice",
+        }),
       });
 
-      setMessages(prev => [...prev, { role: "assistant", text: solutionText }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: solutionText },
+      ]);
 
       const ttsRes = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: solutionText })
+        body: JSON.stringify({ text: solutionText }),
       });
       const blob = await ttsRes.blob();
       const url = URL.createObjectURL(blob);
@@ -221,7 +257,12 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       await fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId, role: "system", text: "CONVO_END", phase: "ended" })
+        body: JSON.stringify({
+          conversationId,
+          role: "system",
+          text: "CONVO_END",
+          phase: "ended",
+        }),
       });
       localStorage.removeItem("convId");
       setPhase("ended");
@@ -234,24 +275,28 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const texts = {
     hr: {
       title: "U 90 sekundi do JEDNOG AI rješenja za vašu tvrtku.",
-      subtitle: "Primarno glasom, uz opciju chata. U ovom demou agent je samo vizualni prikaz.",
+      subtitle:
+        "Primarno glasom, uz opciju chata. U ovom demou agent je samo vizualni prikaz.",
       startCall: "Pokreni razgovor",
       switchToChat: "Prebaci na chat",
       mute: "Mute",
-      privacy: "Razgovor se snima i transkribira u produkciji. Ovo je demo bez snimanja.",
+      privacy:
+        "Razgovor se snima i transkribira u produkciji. Ovo je demo bez snimanja.",
       learnMore: "Saznaj više",
-      steps: ["Uvod", "Pitanja", "Rješenje"]
+      steps: ["Uvod", "Pitanja", "Rješenje"],
     },
     en: {
       title: "ONE AI solution for your company in 90 seconds.",
-      subtitle: "Primarily voice-based, with chat option. This demo shows only visual representation.",
+      subtitle:
+        "Primarily voice-based, with chat option. This demo shows only visual representation.",
       startCall: "Start conversation",
       switchToChat: "Switch to chat",
       mute: "Mute",
-      privacy: "Conversation is recorded and transcribed in production. This is a demo without recording.",
+      privacy:
+        "Conversation is recorded and transcribed in production. This is a demo without recording.",
       learnMore: "Learn more",
-      steps: ["Intro", "Questions", "Solution"]
-    }
+      steps: ["Intro", "Questions", "Solution"],
+    },
   } as const;
 
   const currentTexts = texts[language];
@@ -274,7 +319,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     }
   }, [phase]);
 
-
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -286,11 +330,16 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   }, []);
 
   useEffect(() => {
+    return () => {
+      audioCtxRef.current?.close?.();
+    };
+  }, []);
+
+  useEffect(() => {
     if (phase === "closing" && !contactSubmitted) {
       setContactOpen(true);
     }
   }, [phase, contactSubmitted]);
-
 
   useEffect(() => {
     if (phase !== "collect") return;
@@ -330,7 +379,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     };
   }, [phase]);
 
-    async function startVoice() {
+  async function startVoice() {
     if (!consentGiven) {
       setGdprOpen(true);
       return;
@@ -353,53 +402,28 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
     setPhase("intro");
     startAt.current = Date.now();
-
-    const c = convRef.current;
-    if (!c) {
-      const err = new Error("Conversation hook nije inicijaliziran");
-      addDevLog("startVoice-error", err);
-      alert("Nemoguće pokrenuti glasovni razgovor – vidi konzolu.");
-      setPhase("idle");
-      return;
-    }
-
     const agentId = import.meta.env.VITE_ELEVEN_AGENT_ID!;
 
-    // 2️⃣ zatraži mikrofon i pokreni ElevenLabs STT-TTS (WebRTC uz WebSocket fallback)
     try {
-      // tražimo mic dozvolu – ovo baci grešku ako je blokirano
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // ① Pokušaj WebRTC (bolja kvaliteta)
-      await c.startSession({ agentId, connectionType: "webrtc" });
-      addDevLog("startVoice", "WebRTC spojeno ✅");
-    } catch (webrtcErr) {
-      addDevLog("webrtc-failed", webrtcErr as Error);
+      await startSession({
+        agentId,
+        onConnect: () => setPhase("collect"),
+        // connectionType maknut – prepusti SDK-u da auto-odabere (WebRTC/WebSocket).
+      });
 
-      try {
-        // ② Fallback na WebSocket
-        await c.startSession({ agentId, connectionType: "websocket" });
-        addDevLog("startVoice", "WebSocket spojeno ✅");
-      } catch (wsErr) {
-        addDevLog("websocket-failed", wsErr as Error);
-        alert(
-          "Ne mogu se spojiti na ElevenLabs (WebRTC ni WebSocket). Provjeri mrežu ili kontaktiraj podršku."
-        );
-        setPhase("idle");
-        return;
-      }
+      // 4️⃣ nakon timeouta finaliziraj
+      timer.current = setTimeout(() => {
+        setPhase("closing");
+        finalize();
+      }, COLLECT_TIMEOUT_MS);
+    } catch (err) {
+      addDevLog("startVoice-error", err as Error);
+      alert("Nemoguće pokrenuti glasovni razgovor – vidi konzolu.");
+      setPhase("idle");
     }
-
-    setPhase("collect");
-
-    // 4️⃣ nakon timeouta finaliziraj
-    timer.current = setTimeout(() => {
-      setPhase("closing");
-      finalize();
-    }, COLLECT_TIMEOUT_MS);
   }
-
-
 
   async function handleConsent() {
     setConsentGiven(true);
@@ -413,8 +437,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       body: JSON.stringify({
         conversationId,
         role: "system",
-        text: "CONSENT_GIVEN"
-      })
+        text: "CONSENT_GIVEN",
+      }),
     });
 
     // sada pokreni voice
@@ -424,14 +448,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   async function handleSaveContact(email: string, phone: string) {
     await fetch("/api/agent", {
       method: "POST",
-      headers: { "Content-Type":"application/json" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         conversationId,
         role: "user",
-        text: `CONTACT::${email}|${phone}`
-      })
+        text: `CONTACT::${email}|${phone}`,
+      }),
     });
-    localStorage.setItem("contactDone","yes");
+    localStorage.setItem("contactDone", "yes");
     setContactSubmitted(true);
     setContactOpen(false);
   }
@@ -442,7 +466,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     setSending(true);
 
     const userTurn = { role: "user" as const, text: input.trim() };
-    setMessages(prev => [...prev, userTurn]);
+    setMessages((prev) => [...prev, userTurn]);
 
     await fetch("/api/agent", {
       method: "POST",
@@ -451,11 +475,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         conversationId,
         role: "user",
         text: input.trim(),
-        mode: "chat"
-      })
+        mode: "chat",
+      }),
     });
 
-    conversation.sendUserMessage(input.trim());
+    sendUserMessage(input.trim());
     setActiveSpeaker("user");
 
     setInput("");
@@ -514,7 +538,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Transkript</h3>
+            <h3 className="text-lg font-semibold text-foreground">
+              Transkript
+            </h3>
           </div>
           {phase === "collect" && (
             <p className="text-xs text-muted">🎙️ Snimamo…</p>
@@ -526,7 +552,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                 <div key={index} className="flex flex-col space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs font-medium">
-                      {message.role === "user" ? (language === "hr" ? "Vi" : "You") : "Agent"}
+                      {message.role === "user"
+                        ? language === "hr"
+                          ? "Vi"
+                          : "You"
+                        : "Agent"}
                     </span>
                   </div>
                   <p className="text-sm text-foreground bg-white/40 rounded-lg p-3 animate-fade-in">
@@ -539,14 +569,19 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           </div>
 
           {mode === "chat" && (
-            <form onSubmit={onSubmit} className="mt-4 flex items-center space-x-2">
+            <form
+              onSubmit={onSubmit}
+              className="mt-4 flex items-center space-x-2"
+            >
               <input
                 className="w-full bg-white/60 rounded-lg px-4 py-3 text-sm placeholder:text-muted-foreground"
-                placeholder={language === "hr" ? "Napišite poruku..." : "Type a message..."}
+                placeholder={
+                  language === "hr" ? "Napišite poruku..." : "Type a message..."
+                }
                 value={input}
-                onChange={e => {
+                onChange={(e) => {
                   setInput(e.target.value);
-                  conversation.sendUserActivity();
+                  sendUserActivity();
                 }}
                 disabled={mode !== "chat" || sending}
               />
@@ -569,8 +604,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                     index === currentStep
                       ? "bg-primary text-primary-foreground"
                       : index < currentStep
-                      ? "bg-accent text-accent-foreground"
-                      : "bg-white/30 text-muted-foreground"
+                        ? "bg-accent text-accent-foreground"
+                        : "bg-white/30 text-muted-foreground"
                   }`}
                 >
                   {step}
@@ -584,11 +619,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               ></div>
             </div>
           </div>
-      </div>
+        </div>
       </div>
 
       {contactSubmitted && (
-        <button className="text-xs underline text-muted" onClick={() => setContactOpen(true)}>
+        <button
+          className="text-xs underline text-muted"
+          onClick={() => setContactOpen(true)}
+        >
           Uredi kontakt
         </button>
       )}
@@ -619,7 +657,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       {DEBUG && (
         <details className="mt-4 text-xs max-h-56 overflow-auto bg-neutral-900 text-white rounded p-2">
           <summary>Debug transkript</summary>
-          <pre>{messages.map(m => `${m.role}: ${m.text}`).join("\n")}</pre>
+          <pre>{messages.map((m) => `${m.role}: ${m.text}`).join("\n")}</pre>
         </details>
       )}
     </div>
@@ -627,4 +665,3 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 };
 
 export default AgentPanel;
-
