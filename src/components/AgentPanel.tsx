@@ -163,6 +163,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ conversationId, role: "system", text: "CONVO_END", phase: "ended" })
       });
+      localStorage.removeItem("convId");
       setPhase("ended");
       setActiveSpeaker(null);
     } catch (err) {
