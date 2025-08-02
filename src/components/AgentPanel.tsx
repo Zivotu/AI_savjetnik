@@ -23,6 +23,9 @@ interface AgentPanelProps {
 }
 
 const AgentPanel = ({ language }: AgentPanelProps) => {
+  //////////////////// 1. & 2. — PRI VRHU KOMPONENTE  ////////////////////
+  const DEBUG = import.meta.env.DEV;
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [messages, setMessages] = useState<Array<{ type: "agent" | "user"; text: string; time: string }>>([]);
   const [interim, setInterim] = useState<{ type: "agent" | "user"; text: string; time: string } | null>(null);
@@ -58,9 +61,21 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+  //////////////////// 3. — HELPER FUNKCIJA  ////////////////////
+  const addLog = (tag: string, data: unknown) => {
+    if (!DEBUG) return;
+    setDebugLogs(prev =>
+      [...prev.slice(-199),
+       `${new Date().toLocaleTimeString()} [${tag}] ${
+         typeof data === "string" ? data : JSON.stringify(data)
+       }`]
+    );
+    console.log(tag, data);
+  };
 
   const { startSession, sendUserMessage, sendUserActivity } = useConversation({
     onMessage: (m) => {
+      addLog("onMessage", m);
       // clear any interim text once a final message is received
       setInterim(null);
       if (phase === "intro" && m.source === "user") {
@@ -95,6 +110,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       });
     },
     onDebug: (d: { type: string; response?: string }) => {
+      addLog("onDebug", d);
       if (d.type === "tentative_agent_response" && d.response) {
         setInterim({
           type: "agent",
@@ -109,6 +125,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           time: new Date().toLocaleTimeString(),
         });
       }
+    },
+
+    onError: (err) => {
+      addLog("onError", err);
     },
 
   });
@@ -582,6 +602,12 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         language={language}
         onClose={() => setSolutionOpen(false)}
       />
+      {DEBUG && (
+        <details className="mt-2 text-xs max-h-48 overflow-auto bg-black/80 text-white rounded p-2">
+          <summary>Debug ({debugLogs.length})</summary>
+          <pre className="whitespace-pre-wrap">{debugLogs.join('\n')}</pre>
+        </details>
+      )}
     </div>
   );
 };
