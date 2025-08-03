@@ -16,6 +16,11 @@ import agentImg from "@/../assets/agent_1.png";
 
 type Turn = { role: "user" | "assistant"; text: string; time: string };
 
+interface ContactInfo {
+  email: string;
+  phone: string;
+}
+
 function TypeWriter({ text }: { text: string }) {
   const [shown, setShown] = useState("");
   useEffect(() => {
@@ -91,9 +96,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const closingHandled = useRef(false);
   // Web-Audio za ElevenLabs TTS
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const contactRef = useRef<{ email: string; phone: string } | null>(null);
+  const contactRef = useRef<ContactInfo | null>(null);
   const openContactResolver = useRef<
-    ((data?: { email: string; phone: string }) => void) | null
+    ((data?: ContactInfo) => void) | null
   >(null);
 
   const messagesRef = useRef<Turn[]>([]);
@@ -221,10 +226,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     onError: (e) => console.error("[conversation-error]", e),
     clientTools: {
       openContactConfirm: () => {
-        return new Promise<any>((resolve) => {
+        return new Promise<ContactInfo | undefined>((resolve) => {
           openContactResolver.current = resolve; // will receive {email,phone}
           setContactOpen(true);
-        }) as any; // cast to satisfy sdk typing
+        }) as unknown as Promise<string | number | void>; // cast to satisfy sdk typing
       },
     },
   });
