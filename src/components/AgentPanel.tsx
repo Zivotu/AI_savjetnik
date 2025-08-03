@@ -190,7 +190,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setInterim(null);
       setPhase((p) => (p === "intro" && m.source === "user" ? "collect" : p));
       setActiveSpeaker(m.source === "user" ? "user" : "agent");
-      setIsSpeaking(m.source === "assistant");
+      setIsSpeaking(m.source === "agent");
       setIsListening(m.source === "user");
 
       const msg: Turn = {
@@ -960,3 +960,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                 </div>
               </motion.section>
             </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+export default AgentPanel;
