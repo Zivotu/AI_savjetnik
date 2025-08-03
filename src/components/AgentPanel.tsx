@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import AnimatedAvatar from "./AnimatedAvatar";
 import MessageBubble from "./MessageBubble";
 import ControlPanel from "./ControlPanel";
 import { useConversation } from "@/hooks/useConversation";
+import { Button } from "@/components/ui/button";
+
+const COLLECT_TIMEOUT_MS = 15000;
 
 interface Turn {
   role: "user" | "assistant";
@@ -29,6 +32,19 @@ const AgentPanel: React.FC<AgentPanelProps> = () => {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState<"user" | "agent" | null>(null);
+
+  const startAt = useRef<number>(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function startChatCollect() {
+    if (phase !== "idle") return;
+    setPhase("collect");
+    startAt.current = Date.now();
+    timer.current = setTimeout(() => {
+      setPhase("closing");
+      finalize();
+    }, COLLECT_TIMEOUT_MS);
+  }
 
   const { startSession, endSession, sendUserMessage } = useConversation({
     onMessage: async (m: ConversationMessage) => {
@@ -62,7 +78,8 @@ const AgentPanel: React.FC<AgentPanelProps> = () => {
     onError: (e) => console.error("[conversation-error]", e),
   });
 
-    const finalize = async (url: string) => {
+  const finalize = async (url?: string) => {
+    if (url) {
       const audio = new Audio(url);
       audio.play();
       audio.onended = async () => {
@@ -70,7 +87,18 @@ const AgentPanel: React.FC<AgentPanelProps> = () => {
         setPhase("ended");
         localStorage.removeItem("convId");
       };
+    } else {
+      await endSession();
+      setPhase("ended");
+      localStorage.removeItem("convId");
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
     };
+  }, []);
 
   const startVoice = async () => {
     await startSession({
@@ -115,7 +143,19 @@ const AgentPanel: React.FC<AgentPanelProps> = () => {
             setInput={setInput}
             sending={sending}
             handleChatSubmit={handleChatSubmit}
+            startChatCollect={startChatCollect}
           />
+          {phase === "collect" && mode === "chat" && (
+            <Button
+              className="mt-4"
+              onClick={() => {
+                setPhase("closing");
+                finalize();
+              }}
+            >
+              Dobij AI rješenje
+            </Button>
+          )}
         </div>
         <div className="flex-1 overflow-y-auto">
           {messages.map((m, i) => (

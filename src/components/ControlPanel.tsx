@@ -10,6 +10,7 @@ interface Props {
   setInput: (s: string) => void;
   sending: boolean;
   handleChatSubmit: (e: React.FormEvent) => void;
+  startChatCollect: () => void;
 }
 
 const ControlPanel: React.FC<Props> = ({
@@ -22,6 +23,7 @@ const ControlPanel: React.FC<Props> = ({
   setInput,
   sending,
   handleChatSubmit,
+  startChatCollect,
 }) => (
   <div className="flex flex-col items-center space-y-6">
     <button
@@ -60,7 +62,11 @@ const ControlPanel: React.FC<Props> = ({
         Govor
       </button>
       <button
-        onClick={() => setMode("chat")}
+        data-evt="agent_switch_chat"
+        onClick={() => {
+          setMode("chat");
+          startChatCollect();
+        }}
         className={`px-4 py-2 rounded-full text-sm font-medium transition-all
           ${mode === "chat" ? "bg-white text-gray-800 shadow-md" : "text-gray-600 hover:text-gray-800"}`}
       >
