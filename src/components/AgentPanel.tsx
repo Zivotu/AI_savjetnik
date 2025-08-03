@@ -92,7 +92,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   // Web-Audio za ElevenLabs TTS
   const audioCtxRef = useRef<AudioContext | null>(null);
   const contactRef = useRef<{ email: string; phone: string } | null>(null);
-  const openContactResolver = useRef<(() => void) | null>(null);
+  const openContactResolver = useRef<
+    ((data?: { email: string; phone: string }) => void) | null
+  >(null);
 
   const messagesRef = useRef<Turn[]>([]);
   useEffect(() => {
@@ -218,13 +220,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     },
     onError: (e) => console.error("[conversation-error]", e),
     clientTools: {
-      openContactConfirm: (_params: unknown) => {
-        setContactOpen(true);
-        return new Promise<void>((resolve) => {
-          openContactResolver.current = () => {
-            resolve();
-          };
-        });
+      openContactConfirm: () => {
+        return new Promise<any>((resolve) => {
+          openContactResolver.current = resolve; // will receive {email,phone}
+          setContactOpen(true);
+        }) as any; // cast to satisfy sdk typing
       },
     },
   });
@@ -281,8 +281,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           body: JSON.stringify({
             email: contactRef.current.email,
             phone: contactRef.current.phone,
-            painPoints: [], // can be filled later
-            proposal: solutionText, // NEW – agent’s suggestion
+            painPoints: [],          // fill later if needed
+            proposal: solutionText,  // include agent proposal
           }),
         });
       }
@@ -539,9 +539,12 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   }
 
   async function handleSaveContact(email: string, phone: string) {
-    // reply to openContactConfirm, if waiting
-    openContactResolver.current?.();
+    // hand back to ElevenLabs
+    openContactResolver.current?.({ email, phone });
     openContactResolver.current = null;
+
+    // keep copy for finalize()
+    contactRef.current = { email, phone };
 
     await fetch("/api/agent", {
       method: "POST",
@@ -553,7 +556,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       }),
     });
     localStorage.setItem("contactDone", "yes");
-    contactRef.current = { email, phone };
     setContactSubmitted(true);
     setContactOpen(false);
   }

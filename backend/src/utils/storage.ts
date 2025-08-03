@@ -22,7 +22,7 @@ async function readConversation(id: string) {
 }
 
 export async function writeAtomic(p: string, data: string) {
-  await fs.writeFile(p, data, 'utf8'); // direktno u finalni .json
+  await fs.writeFile(p, data, "utf8");        // simple, safe on Windows
 }
 
 export async function appendTurn(id: string, turn: Turn) {
