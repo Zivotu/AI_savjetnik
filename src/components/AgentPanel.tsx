@@ -92,6 +92,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   // Web-Audio za ElevenLabs TTS
   const audioCtxRef = useRef<AudioContext | null>(null);
 
+  const openContactResolver = useRef<
+    ((d: { email: string; phone: string }) => void) | null
+  >(null);
+
   const messagesRef = useRef<Turn[]>([]);
   useEffect(() => {
     messagesRef.current = messages;
@@ -215,6 +219,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setAvatarVisible(false);
     },
     onError: (e) => console.error("[conversation-error]", e),
+    clientTools: {
+      openContactConfirm: async () => {
+        return new Promise<{ email: string; phone: string }>((resolve) => {
+          openContactResolver.current = resolve;
+          setContactOpen(true);
+        });
+      },
+    },
   });
 
   async function finalize() {
@@ -514,6 +526,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   }
 
   async function handleSaveContact(email: string, phone: string) {
+    // reply to openContactConfirm, if waiting
+    openContactResolver.current?.({ email, phone });
+    openContactResolver.current = null;
+
     await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -526,11 +542,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     await fetch("/api/sendEmail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        phone,
-        painPoints: [], // TODO: puniti kad budeš imao sažetak
-      }),
+      body: JSON.stringify({ email, phone, painPoints: [] }),
     });
     localStorage.setItem("contactDone", "yes");
     setContactSubmitted(true);
