@@ -3,6 +3,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "./styles/global.css";
+
 /* Neurobiz Design System - Pastel colors, gradients, glassy effects */
 
 
