@@ -1,18 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Play,
-  MessageCircle,
-  Mic as MicIcon,
-  Headphones as HeadphonesIcon,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
 import SolutionModal from "./SolutionModal";
+import VoiceAgentDisplay from "./VoiceAgentDisplay";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
-import agentImg from "@/../assets/agent_1.png";
 
 type Turn = { role: "user" | "assistant"; text: string; time: string };
 
@@ -76,8 +69,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     () => localStorage.getItem("contactDone") === "yes",
   );
 
-  const [avatarVisible, setAvatarVisible] = useState(false);
-
   const [solutionOpen, setSolutionOpen] = useState(false);
   const [solutionTextState, setSolutionTextState] = useState("");
 
@@ -87,6 +78,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const [activeSpeaker, setActiveSpeaker] = useState<"user" | "agent" | null>(
     null,
   );
+  const [micEnabled, setMicEnabled] = useState(false);
+  const [muted, setMuted] = useState(false);
   const timer = useRef<NodeJS.Timeout>();
   const startAt = useRef(0);
 
@@ -221,7 +214,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     onConnect: () => setPhase("collect"),
     onDisconnect: () => {
       setActiveSpeaker(null);
-      setAvatarVisible(false);
     },
     onError: (e) => console.error("[conversation-error]", e),
     clientTools: {
@@ -500,7 +492,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         connectionType: "websocket",
       });
       setSessionActive(true);
-      setAvatarVisible(true);
 
       // 4️⃣ nakon timeouta finaliziraj
       timer.current = setTimeout(() => {
@@ -519,7 +510,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     eviPlayerRef.current?.stop?.();
     setSessionActive(false);
     setActiveSpeaker(null);
-    setAvatarVisible(false);
     setPhase("idle");
   }
 
@@ -599,79 +589,39 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         connectionType: "websocket",
       });
       setSessionActive(true);
-      setAvatarVisible(true);
     }
   }
+
+  const isChatActive = phase !== "idle";
+  const isSpeaking = activeSpeaker === "agent";
+  const isListening = activeSpeaker === "user" || micEnabled;
+
+  const handleStartChat = () => (consentGiven ? startVoice() : setGdprOpen(true));
+  const handleMicToggle = () => setMicEnabled((p) => !p);
+  const handleMuteToggle = () => setMuted((p) => !p);
+  const handleSettingsToggle = () => {};
+  const handleEndChat = () => {
+    stopVoice();
+    setMicEnabled(false);
+  };
 
   return (
     <div className="glass-strong rounded-3xl p-8 shadow-medium h-full">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-        <div className="flex flex-col justify-center space-y-6">
-          <div className="flex justify-center mb-6">
-            <div className="ai-orb w-24 h-24 shadow-glow relative">
-              <div className="absolute inset-0 flex items-center justify-center z-10 space-x-4">
-                <MicIcon
-                  className={`w-6 h-6 ${
-                    activeSpeaker === "user" && mode === "voice"
-                      ? "animate-pulse text-white"
-                      : "text-white"
-                  }`}
-                />
-                <HeadphonesIcon
-                  className={`w-6 h-6 ${
-                    activeSpeaker === "agent" && mode === "voice"
-                      ? "animate-pulse text-white"
-                      : "text-white"
-                  }`}
-                />
-                <img
-                  src={agentImg}
-                  alt="AI agent"
-                  className={`w-12 h-12 rounded-full ml-4 transition-opacity duration-500 ${
-                    avatarVisible ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center lg:text-left space-y-4">
-            <h1 className="text-2xl lg:text-3xl font-bold leading-tight">
-              {currentTexts.title}
-            </h1>
-            <p className="text-muted-foreground max-w-md mx-auto lg:mx-0">
-              {currentTexts.subtitle}
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-            <Button
-              className="flex items-center justify-center space-x-2 bg-gradient-primary text-white px-6 py-3 rounded-xl font-medium shadow-medium hover:shadow-strong transition-smooth hover:scale-105"
-              data-evt="agent_start_call"
-              disabled={phase !== "idle"}
-              onClick={() => (consentGiven ? startVoice() : setGdprOpen(true))}
-            >
-              <Play className="w-4 h-4" />
-              <span>{currentTexts.startCall}</span>
-            </Button>
-            <button
-              className="flex items-center justify-center space-x-2 bg-white/50 text-foreground px-4 py-3 rounded-xl font-medium border border-white/30 hover:bg-white/70 transition-smooth"
-              data-evt="agent_switch_chat"
-              onClick={() => {
-                if (mode === "voice") {
-                  stopVoice();
-                  setMode("chat");
-                } else {
-                  setMode("voice");
-                  startVoice();
-                }
-              }}
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>{currentTexts.switchToChat}</span>
-            </button>
-          </div>
-        </div>
+        <VoiceAgentDisplay
+          title={currentTexts.title}
+          subtitle={currentTexts.subtitle}
+          startLabel={currentTexts.startCall}
+          isChatActive={isChatActive}
+          isSpeaking={isSpeaking}
+          isListening={isListening}
+          isMuted={muted}
+          onStartChat={handleStartChat}
+          onMicToggle={handleMicToggle}
+          onMuteToggle={handleMuteToggle}
+          onSettingsToggle={handleSettingsToggle}
+          onEndChat={handleEndChat}
+        />
 
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
