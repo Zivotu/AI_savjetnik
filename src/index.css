@@ -1,6 +1,7 @@
 /* tailwindcss v3.4 — suppress VS Code unknownAtRules */
 @import "./styles/global.css";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* tailwindcss – ignore unknown @rules in VS Code */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
