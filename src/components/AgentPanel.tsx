@@ -1,23 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Play,
   MessageCircle,
   Mic as MicIcon,
-  MicOff,
-  Volume2,
-  VolumeX,
   Headphones as HeadphonesIcon,
-  Settings,
-  X,
-  Send,
-  Phone,
-  Mail,
-  Check,
-  ChevronRight,
-  Brain,
-  Sparkles,
-  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GdprModal from "./GdprModal";
@@ -26,6 +12,7 @@ import SolutionModal from "./SolutionModal";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
+import agentImg from "@/../assets/agent_1.png";
 
 type Turn = { role: "user" | "assistant"; text: string; time: string };
 
@@ -90,34 +77,29 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   );
 
   const [avatarVisible, setAvatarVisible] = useState(false);
+
   const [solutionOpen, setSolutionOpen] = useState(false);
   const [solutionTextState, setSolutionTextState] = useState("");
 
   const [phase, setPhase] = useState<
     "idle" | "intro" | "collect" | "closing" | "ended"
   >("idle");
-  const [activeSpeaker, setActiveSpeaker] = useState<
-    "user" | "assistant" | null
-  >(null);
-
-  // Za novi dizajn
-  const [isChatActive, setIsChatActive] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-
+  const [activeSpeaker, setActiveSpeaker] = useState<"user" | "agent" | null>(
+    null,
+  );
   const timer = useRef<NodeJS.Timeout>();
   const startAt = useRef(0);
+
   const transcriptRef = useRef<HTMLDivElement>(null);
   const eviSocketRef = useRef<WebSocket | null>(null);
   const eviPlayerRef = useRef<EviWebAudioPlayer | null>(null);
   const closingHandled = useRef(false);
+  // Web-Audio za ElevenLabs TTS
   const audioCtxRef = useRef<AudioContext | null>(null);
   const contactRef = useRef<ContactInfo | null>(null);
-  const openContactResolver = useRef<((data?: ContactInfo) => void) | null>(
-    null,
-  );
+  const openContactResolver = useRef<
+    ((data?: ContactInfo) => void) | null
+  >(null);
 
   const messagesRef = useRef<Turn[]>([]);
   useEffect(() => {
@@ -126,20 +108,24 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   function playAudio(data: ArrayBuffer) {
     try {
+      // init ili uzmi postojeći kontekst
       const ctx =
         audioCtxRef.current ??
-        new (window.AudioContext ||
-          (
-            window as unknown as {
-              webkitAudioContext: typeof AudioContext;
-            }
-          ).webkitAudioContext)({
+        new (
+          window.AudioContext ||
+            (
+              window as unknown as {
+                webkitAudioContext: typeof AudioContext;
+              }
+            ).webkitAudioContext
+        )({
           sampleRate: 48_000,
         });
       audioCtxRef.current = ctx;
 
-      if (!(data instanceof ArrayBuffer)) return;
+      if (!(data instanceof ArrayBuffer)) return; // safety-guard
 
+      // pokušaj dekodirati, fallback ako ne uspije
       ctx
         .decodeAudioData(data.slice(0))
         .then((buf) => {
@@ -158,20 +144,19 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   const onAudio = (packet: unknown) => {
     if (mode === "chat") return;
+    // ⚠️ ElevenLabs preko WebSocketa katkad šalje “ping” frame ili JSON –
+    //    provjeri i pretvori u ArrayBuffer samo ako ima audio.
     let buf: ArrayBuffer | null = null;
 
-    if (
-      packet &&
-      packet instanceof Object &&
-      (packet as { constructor: unknown }).constructor === ArrayBuffer
-    ) {
-      buf = packet as ArrayBuffer;
+    if (packet instanceof ArrayBuffer) {
+      buf = packet; // WebRTC varianta – sirovi PCM/Opus
     } else if (
       typeof packet === "object" &&
       packet !== null &&
       "audio" in packet &&
       typeof (packet as { audio: unknown }).audio === "string"
     ) {
+      // { audio: "base64..." }  – WS varianta
       const str = atob((packet as { audio: string }).audio);
       const arr = new Uint8Array(str.length);
       for (let i = 0; i < str.length; i++) arr[i] = str.charCodeAt(i);
@@ -182,6 +167,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       addDevLog("onAudio", `${buf.byteLength}B`);
       playAudio(buf);
     } else {
+      // tih paket ignoriramo da ne rušimo UI
       addDevLog("onAudio", "⏭️ prazan paket");
     }
   };
@@ -190,9 +176,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     onMessage: (m) => {
       setInterim(null);
       setPhase((p) => (p === "intro" && m.source === "user" ? "collect" : p));
-      setActiveSpeaker(m.source === "user" ? "user" : "assistant");
-      setIsSpeaking(m.source === "assistant");
-      setIsListening(m.source === "user");
+      setActiveSpeaker(m.source === "user" ? "user" : "agent");
 
       const msg: Turn = {
         role: m.source === "user" ? "user" : "assistant",
@@ -234,28 +218,18 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       }
     },
     onAudio,
-    onConnect: () => {
-      setPhase("collect");
-      setIsChatActive(true);
-    },
+    onConnect: () => setPhase("collect"),
     onDisconnect: () => {
       setActiveSpeaker(null);
       setAvatarVisible(false);
-      setIsSpeaking(false);
-      setIsListening(false);
     },
     onError: (e) => console.error("[conversation-error]", e),
     clientTools: {
       openContactConfirm: () => {
-        return new Promise<void>((resolve) => {
-          openContactResolver.current = (data?: ContactInfo) => {
-            if (data) {
-              contactRef.current = data;
-            }
-            resolve();
-          };
+        return new Promise<ContactInfo | undefined>((resolve) => {
+          openContactResolver.current = resolve; // will receive {email,phone}
           setContactOpen(true);
-        });
+        }) as unknown as Promise<string | number | void>; // cast to satisfy sdk typing
       },
     },
   });
@@ -265,7 +239,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     closingHandled.current = true;
 
     const transcript = messagesRef.current
-      .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`)
+      .map((m) => `${m.role === "user" ? "User" : "Agent"}: ${m.text}`)
       .join("\n");
 
     try {
@@ -312,8 +286,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           body: JSON.stringify({
             email: contactRef.current.email,
             phone: contactRef.current.phone,
-            painPoints: [],
-            proposal: solutionText,
+            painPoints: [],          // fill later if needed
+            proposal: solutionText,  // include agent proposal
           }),
         });
       }
@@ -365,8 +339,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       localStorage.removeItem("convId");
       setPhase("ended");
       setActiveSpeaker(null);
-      setIsSpeaking(false);
-      setIsListening(false);
     } catch (err) {
       console.error("finalize failed", err);
     }
@@ -374,17 +346,16 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   const texts = {
     hr: {
-      title: "JEDNO AI rješenje",
-      subtitle: "za 90 sekundi",
-      description:
-        "Specijalizirani smo za AI savjetovanje i izgradnju konkretnih rješenja. Ovaj assistant demonstrira kako umjetna inteligencija može transformirati vaše poslovanje.",
-      startCall: "Pokreni AI razgovor",
-      switchToChat: "Preferiram chat",
+      title: "U 90 sekundi do JEDNOG AI rješenja za vašu tvrtku.",
+      subtitle:
+        "Mi smo tim specijaliziran za AI savjetovanje i izgradnju konkretnih rješenja. Ovaj agent je samo uvod – pokazuje, na svom primjeru, kako umjetna inteligencija može olakšati poslovanje. Prikazana rješenja su brza, okvirna i služe za orijentaciju; za detaljne prijedloge preporučujemo izravan kontakt. Prvi odgovor na svaki upit, e-poštom, potpuno je besplatan.",
+      startCall: "Pokreni razgovor",
+      switchToChat: "Prebaci na chat",
       mute: "Mute",
       privacy: (
         <>
           Razgovor se snima i transkribira radi poboljšanja usluge; podaci se
-          čuvaju šifrirano i usklađeni su s GDPR-om{" "}
+          čuvaju šifrirano i usklađeni su s GDPR-om.{' '}
           <a className="underline" href="/privacy">
             Detalji o obradi podataka
           </a>
@@ -395,17 +366,16 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       steps: ["Uvod", "Pitanja", "Rješenje"],
     },
     en: {
-      title: "ONE AI solution",
-      subtitle: "in 90 seconds",
-      description:
-        "We are a team specialized in AI consulting and building concrete solutions. This assistant demonstrates how artificial intelligence can transform your business.",
-      startCall: "Start AI conversation",
-      switchToChat: "Prefer chat",
+      title: "ONE AI solution for your company in 90 seconds.",
+      subtitle:
+        "We are a team specialized in AI consulting and building concrete solutions. This agent is only an introduction – it demonstrates, through its own example, how artificial intelligence can simplify business operations. The presented solutions are quick, approximate, and serve for orientation; for detailed proposals we recommend direct contact. The first reply to every inquiry, by email, is completely free.",
+      startCall: "Start conversation",
+      switchToChat: "Switch to chat",
       mute: "Mute",
       privacy: (
         <>
           Conversation is recorded and transcribed to improve the service; data
-          is stored encrypted and compliant with GDPR{" "}
+          is stored encrypted and compliant with GDPR.{' '}
           <a className="underline" href="/privacy">
             Details about data processing
           </a>
@@ -419,7 +389,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   const currentTexts = texts[language];
 
-  // Track progress based on conversation phase
+  // Track progress based on the conversation phase
   useEffect(() => {
     switch (phase) {
       case "intro":
@@ -477,13 +447,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       try {
         const data = JSON.parse(event.data as string);
         if (data.audio_output?.data) {
-          setActiveSpeaker("assistant");
-          setIsSpeaking(true);
+          setActiveSpeaker("agent");
           player.enqueueBase64(data.audio_output.data);
         }
         if (data.event === "user_interruption") {
           player.stop();
-          setIsSpeaking(false);
         }
       } catch (err) {
         console.error("Failed to parse EVI message", err);
@@ -492,7 +460,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
     ws.onclose = () => {
       player.stop();
-      setIsSpeaking(false);
     };
 
     return () => {
@@ -507,6 +474,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       return;
     }
 
+    // 1️⃣ pošalji intro-turn backendu
     await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -520,8 +488,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     });
 
     setActiveSpeaker("user");
+
     setPhase("intro");
-    setIsChatActive(true);
     startAt.current = Date.now();
 
     try {
@@ -534,6 +502,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setSessionActive(true);
       setAvatarVisible(true);
 
+      // 4️⃣ nakon timeouta finaliziraj
       timer.current = setTimeout(() => {
         setPhase("closing");
         finalize();
@@ -542,7 +511,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       addDevLog("startVoice-error", err as Error);
       alert("Nemoguće pokrenuti glasovni razgovor – vidi konzolu.");
       setPhase("idle");
-      setIsChatActive(false);
     }
   }
 
@@ -553,9 +521,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     setActiveSpeaker(null);
     setAvatarVisible(false);
     setPhase("idle");
-    setIsChatActive(false);
-    setIsSpeaking(false);
-    setIsListening(false);
   }
 
   async function handleConsent() {
@@ -563,6 +528,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     localStorage.setItem("consent", "yes");
     setGdprOpen(false);
 
+    // logiraj backend
     await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -573,12 +539,17 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       }),
     });
 
+    // sada pokreni voice
     startVoice();
   }
 
   async function handleSaveContact(email: string, phone: string) {
+    // hand back to ElevenLabs
     openContactResolver.current?.({ email, phone });
     openContactResolver.current = null;
+
+    // keep copy for finalize()
+    contactRef.current = { email, phone };
 
     await fetch("/api/agent", {
       method: "POST",
@@ -632,369 +603,211 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     }
   }
 
-  const handleMicToggle = () => {
-    setIsListening(!isListening);
-    if (!isListening) {
-      sendUserActivity();
-    }
-  };
-
-  const handleEndChat = () => {
-    stopVoice();
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 overflow-hidden">
-      {/* Animirani pozadinski elementi */}
-      <div className="absolute inset-0">
-        <motion.div
-          className="absolute top-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
-          animate={{
-            x: [0, 100, 0],
-            y: [0, -50, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"
-          animate={{
-            x: [0, -100, 0],
-            y: [0, 50, 0],
-          }}
-          transition={{ duration: 25, repeat: Infinity }}
-        />
-      </div>
+    <div className="glass-strong rounded-3xl p-8 shadow-medium h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+        <div className="flex flex-col justify-center space-y-6">
+          <div className="flex justify-center mb-6">
+            <div className="ai-orb w-24 h-24 shadow-glow relative">
+              <div className="absolute inset-0 flex items-center justify-center z-10 space-x-4">
+                <MicIcon
+                  className={`w-6 h-6 ${
+                    activeSpeaker === "user" && mode === "voice"
+                      ? "animate-pulse text-white"
+                      : "text-white"
+                  }`}
+                />
+                <HeadphonesIcon
+                  className={`w-6 h-6 ${
+                    activeSpeaker === "agent" && mode === "voice"
+                      ? "animate-pulse text-white"
+                      : "text-white"
+                  }`}
+                />
+                <img
+                  src={agentImg}
+                  alt="AI agent"
+                  className={`w-12 h-12 rounded-full ml-4 transition-opacity duration-500 ${
+                    avatarVisible ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              </div>
+            </div>
+          </div>
 
-      {/* Glavni sadržaj */}
-      <div className="relative z-10 container mx-auto px-4 py-8">
-        <AnimatePresence mode="wait">
-          {!isChatActive ? (
-            // Landing stranica
-            <motion.div
-              key="landing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="min-h-screen flex flex-col items-center justify-center"
+          <div className="text-center lg:text-left space-y-4">
+            <h1 className="text-2xl lg:text-3xl font-bold leading-tight">
+              {currentTexts.title}
+            </h1>
+            <p className="text-muted-foreground max-w-md mx-auto lg:mx-0">
+              {currentTexts.subtitle}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+            <Button
+              className="flex items-center justify-center space-x-2 bg-gradient-primary text-white px-6 py-3 rounded-xl font-medium shadow-medium hover:shadow-strong transition-smooth hover:scale-105"
+              data-evt="agent_start_call"
+              disabled={phase !== "idle"}
+              onClick={() => (consentGiven ? startVoice() : setGdprOpen(true))}
             >
-              {/* Hero sekcija */}
-              <motion.div
-                className="text-center mb-16"
-                initial={{ y: 50 }}
-                animate={{ y: 0 }}
-                transition={{ delay: 0.2 }}
+              <Play className="w-4 h-4" />
+              <span>{currentTexts.startCall}</span>
+            </Button>
+            <button
+              className="flex items-center justify-center space-x-2 bg-white/50 text-foreground px-4 py-3 rounded-xl font-medium border border-white/30 hover:bg-white/70 transition-smooth"
+              data-evt="agent_switch_chat"
+              onClick={() => {
+                if (mode === "voice") {
+                  stopVoice();
+                  setMode("chat");
+                } else {
+                  setMode("voice");
+                  startVoice();
+                }
+              }}
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>{currentTexts.switchToChat}</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">
+              Transkript
+            </h3>
+          </div>
+          {phase === "collect" && messages.length === 0 && (
+            <p className="text-xs opacity-60">🎙️ Snimamo…</p>
+          )}
+
+          <div
+            className="h-72 lg:h-80 overflow-y-auto rounded-lg"
+            ref={transcriptRef}
+          >
+            {messages.map((m, i) => (
+              <p
+                key={i}
+                className={`text-sm mb-1 ${
+                  m.role === "user"
+                    ? "text-neutral-500"
+                    : "text-neutral-900"
+                }`}
               >
-                <motion.div
-                  className="inline-block mb-6 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-full border border-purple-500/30"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <span className="text-sm font-medium text-purple-300">
-                    🚀 AI rješenja za vašu tvrtku
-                  </span>
-                </motion.div>
+                <TypeWriter text={m.text} />
+              </p>
+            ))}
+            {interim && (
+              <p className="text-xs italic opacity-60">{interim.text}</p>
+            )}
+          </div>
 
-                <motion.h1
-                  className="text-6xl md:text-7xl font-bold mb-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    {currentTexts.title}
-                  </span>
-                  <br />
-                  <span className="text-white">{currentTexts.subtitle}</span>
-                </motion.h1>
-
-                <motion.p
-                  className="text-xl text-gray-300 max-w-2xl mx-auto mb-12"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  {currentTexts.description}
-                </motion.p>
-
-                <motion.div
-                  className="flex flex-col sm:flex-row gap-4 justify-center mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  <Button
-                    onClick={startVoice}
-                    className="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl text-white font-semibold text-lg shadow-2xl overflow-hidden"
-                    data-evt="agent_start_call"
-                  >
-                    <span className="relative z-10 flex items-center gap-3">
-                      <Play className="w-5 h-5" />
-                      {currentTexts.startCall}
-                    </span>
-                  </Button>
-
-                  <button
-                    onClick={() => {
-                      setMode("chat");
-                      setIsChatActive(true);
-                    }}
-                    className="px-8 py-4 bg-white/10 backdrop-blur-lg rounded-xl text-white font-semibold border border-white/20 hover:bg-white/20 transition-all"
-                    data-evt="agent_switch_chat"
-                  >
-                    <span className="flex items-center gap-3">
-                      <MessageCircle className="w-5 h-5" />
-                      {currentTexts.switchToChat}
-                    </span>
-                  </button>
-                </motion.div>
-
-                {/* Trust badges */}
-                <motion.div
-                  className="flex flex-wrap gap-6 justify-center text-sm text-gray-400"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.8 }}
-                >
-                  <span className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-400" />
-                    GDPR usklađeno
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-400" />
-                    Besplatan prvi odgovor
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-400" />
-                    Bez obveza
-                  </span>
-                </motion.div>
-              </motion.div>
-
-              {/* Feature cards */}
-              <motion.div
-                className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-20"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
+          {mode === "chat" && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!input.trim()) return;
+                handleChatSubmit(input.trim());
+                setInput("");
+              }}
+              className="mt-4 flex items-center space-x-2"
+            >
+              <input
+                className="w-full bg-white/60 rounded-lg px-4 py-3 text-sm placeholder:text-muted-foreground"
+                placeholder={
+                  language === "hr" ? "Napišite poruku..." : "Type a message..."
+                }
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  sendUserActivity();
+                }}
+                disabled={mode !== "chat" || sending}
+              />
+              <button
+                type="submit"
+                className="bg-gradient-primary text-white rounded-lg px-4 py-3 text-sm font-medium disabled:opacity-50"
+                disabled={!input.trim() || sending}
               >
-                {[
-                  {
-                    icon: Brain,
-                    title: "AI analiza",
-                    desc: "Napredni algoritmi analiziraju vaše potrebe",
-                  },
-                  {
-                    icon: Sparkles,
-                    title: "Brza rješenja",
-                    desc: "Konkretni prijedlozi u samo 90 sekundi",
-                  },
-                  {
-                    icon: Phone,
-                    title: "Personalizirano",
-                    desc: "Rješenja prilagođena vašoj industriji",
-                  },
-                ].map((feature, i) => (
-                  <motion.div
-                    key={i}
-                    className="p-6 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 hover:bg-white/10 transition-all"
-                    whileHover={{ y: -5 }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.2 + i * 0.1 }}
-                  >
-                    <feature.icon className="w-10 h-10 text-purple-400 mb-4" />
-                    <h3 className="text-lg font-semibold text-white mb-2">
-                      {feature.title}
-                    </h3>
-                    <p className="text-gray-400">{feature.desc}</p>
-                  </motion.div>
-                ))}
-              </motion.div>
+                Send
+              </button>
+            </form>
+          )}
 
-              {/* Sekcija članaka */}
-              <motion.section
-                className="w-full py-20"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.5 }}
-              >
-                <div className="max-w-7xl mx-auto px-4">
-                  <motion.div
-                    className="text-center mb-12"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.6 }}
-                  >
-                    <h2 className="text-4xl font-bold text-white mb-4">
-                      Istražite AI mogućnosti
-                    </h2>
-                    <p className="text-gray-400 text-lg">
-                      Praktični vodići i studije slučaja iz stvarnog svijeta
-                    </p>
-                  </motion.div>
-
-                  <div className="grid md:grid-cols-3 gap-8">
-                    {[
-                      {
-                        title: "Automatizacija prodajnih procesa s AI",
-                        category: "Prodaja",
-                        readTime: "5 min",
-                        image: "🤖",
-                        gradient: "from-blue-600 to-cyan-600",
-                        description:
-                          "Kako AI može povećati konverziju za 40% kroz personalizaciju",
-                        stats: "40% ↑",
-                        color: "blue",
-                      },
-                      {
-                        title: "ChatGPT integracija u korisničku podršku",
-                        category: "Podrška",
-                        readTime: "7 min",
-                        image: "💬",
-                        gradient: "from-purple-600 to-pink-600",
-                        description:
-                          "Smanjite vrijeme odgovora na 30 sekundi s AI asistentom",
-                        stats: "85% brže",
-                        color: "purple",
-                      },
-                      {
-                        title: "Prediktivna analitika za e-commerce",
-                        category: "Analitika",
-                        readTime: "6 min",
-                        image: "📊",
-                        gradient: "from-orange-600 to-red-600",
-                        description:
-                          "Predvidite trendove i optimizirajte zalihe pomoću AI modela",
-                        stats: "25% ROI",
-                        color: "orange",
-                      },
-                      {
-                        title: "AI u marketingu: Personalizirane kampanje",
-                        category: "Marketing",
-                        readTime: "8 min",
-                        image: "🎯",
-                        gradient: "from-green-600 to-teal-600",
-                        description:
-                          "Kreirajte kampanje koje konvertiraju 3x bolje",
-                        stats: "3x ROI",
-                        color: "green",
-                      },
-                      {
-                        title: "Glasovni AI asistenti za tvrtke",
-                        category: "Voice AI",
-                        readTime: "5 min",
-                        image: "🎙️",
-                        gradient: "from-indigo-600 to-blue-600",
-                        description:
-                          "Implementacija voice AI rješenja za bolju korisničku uslugu",
-                        stats: "24/7",
-                        color: "indigo",
-                      },
-                      {
-                        title: "AI-driven SEO optimizacija",
-                        category: "SEO",
-                        readTime: "6 min",
-                        image: "🔍",
-                        gradient: "from-pink-600 to-rose-600",
-                        description: "Kako AI mijenja SEO strategije u 2024",
-                        stats: "60% više prometa",
-                        color: "pink",
-                      },
-                    ].map((article, i) => (
-                      <motion.article
-                        key={i}
-                        className="group relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer"
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 1.8 + i * 0.1 }}
-                        whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                      >
-                        {/* Grafika članka */}
-                        <div
-                          className={`relative h-48 bg-gradient-to-br ${article.gradient} p-8 flex items-center justify-center overflow-hidden`}
-                        >
-                          {/* Pozadinski pattern */}
-                          <div className="absolute inset-0 opacity-20">
-                            <div
-                              className="absolute inset-0"
-                              style={{
-                                backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 1px)`,
-                                backgroundSize: "20px 20px",
-                              }}
-                            />
-                          </div>
-
-                          {/* Emoji ikona */}
-                          <motion.div
-                            className="text-6xl relative z-10"
-                            whileHover={{ scale: 1.2, rotate: 10 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          >
-                            {article.image}
-                          </motion.div>
-
-                          {/* Statistika badge */}
-                          <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md rounded-full px-3 py-1">
-                            <span className="text-white font-bold text-sm">
-                              {article.stats}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Sadržaj članka */}
-                        <div className="p-6">
-                          <div className="flex items-center gap-3 mb-3">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-medium bg-${article.color}-500/20 text-${article.color}-400 border border-${article.color}-500/30`}
-                            >
-                              {article.category}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {article.readTime} čitanja
-                            </span>
-                          </div>
-
-                          <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-blue-400 group-hover:bg-clip-text transition-all">
-                            {article.title}
-                          </h3>
-
-                          <p className="text-gray-400 text-sm leading-relaxed mb-4">
-                            {article.description}
-                          </p>
-
-                          <div className="flex items-center justify-between">
-                            <button className="text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2 group/btn">
-                              Pročitaj više
-                              <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Hover overlay efekt */}
-                        <motion.div className="absolute inset-0 bg-gradient-to-t from-purple-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                      </motion.article>
-                    ))}
-                  </div>
-
-                  {/* Load more button */}
-                  <motion.div
-                    className="text-center mt-12"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 2.5 }}
-                  >
-                    <button className="px-8 py-3 bg-white/10 backdrop-blur-lg rounded-xl text-white font-medium border border-white/20 hover:bg-white/20 transition-all inline-flex items-center gap-2 group">
-                      Prikaži više članaka
-                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </motion.div>
-                </div>
-              </motion.section>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              {currentTexts.steps.map((step, index) => (
+                <span
+                  key={index}
+                  className={`text-xs font-medium px-3 py-1 rounded-full transition-smooth ${
+                    index === currentStep
+                      ? "bg-primary text-primary-foreground"
+                      : index < currentStep
+                        ? "bg-accent text-accent-foreground"
+                        : "bg-white/30 text-muted-foreground"
+                  }`}
+                >
+                  {step}
+                </span>
+              ))}
+            </div>
+            <div className="w-full bg-white/30 rounded-full h-2">
+              <div
+                className="h-2 bg-gradient-primary rounded-full transition-all duration-1000 ease-in-out"
+                style={{ width: `${((currentStep + 1) / 3) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {contactSubmitted && (
+        <button
+          className="text-xs underline text-black"
+          onClick={() => setContactOpen(true)}
+        >
+          Uredi kontakt
+        </button>
+      )}
+
+      <div className="text-xs text-muted-foreground mt-6 text-center">
+        <p className="mb-1">{currentTexts.privacy}</p>
+        <button className="text-primary hover:underline font-medium">
+          {currentTexts.learnMore}
+        </button>
+      </div>
+
+      <GdprModal
+        open={gdprOpen}
+        onAccept={handleConsent}
+        onClose={() => setGdprOpen(false)}
+      />
+      <ContactConfirm
+        open={contactOpen}
+        onSave={handleSaveContact}
+        onClose={() => setContactOpen(false)}
+        onDecline={() => {
+          openContactResolver.current?.();
+          openContactResolver.current = null;
+          localStorage.setItem("contactDone", "yes");
+          setContactSubmitted(true);
+          setContactOpen(false);
+        }}
+      />
+      <SolutionModal
+        open={solutionOpen}
+        solution={solutionTextState}
+        language={language}
+        onClose={() => setSolutionOpen(false)}
+      />
+      {DEBUG && (
+        <details className="mt-4 text-xs max-h-56 overflow-auto bg-neutral-900 text-white rounded p-2">
+          <summary>Debug transkript</summary>
+          <pre>{messages.map((m) => `${m.role}: ${m.text}`).join("\n")}</pre>
+        </details>
+      )}
     </div>
   );
 };
