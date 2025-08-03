@@ -1,6 +1,5 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
 
 const DIR = path.resolve(__dirname, '../../transcripts');
 
@@ -12,6 +11,8 @@ type Turn = {
   ts?: string;
 };
 
+const filePath = (id: string) => path.join(DIR, `${id}.json`);
+
 async function readConversation(id: string) {
   try {
     return JSON.parse(await fs.readFile(filePath(id), 'utf8'));
@@ -20,23 +21,22 @@ async function readConversation(id: string) {
   }
 }
 
-async function writeAtomic(id: string, convo: unknown) {
-  await fs.mkdir(DIR, { recursive: true });
-  const tmp = path.join(DIR, `${randomUUID()}.tmp`);
-  await fs.writeFile(tmp, JSON.stringify(convo, null, 2), 'utf8');
-  await fs.rename(tmp, filePath(id));
+export async function writeAtomic(p: string, data: string) {
+  await fs.writeFile(p, data, 'utf8'); // direktno u finalni .json
 }
-
-const filePath = (id: string) => path.join(DIR, `${id}.json`);
 
 export async function appendTurn(id: string, turn: Turn) {
   const convo = await readConversation(id);
   (convo.turns as Turn[]).push({ ...turn, ts: new Date().toISOString() });
-  await writeAtomic(id, convo);
+  await writeAtomic(filePath(id), JSON.stringify(convo, null, 2));
 }
 
-export async function updateConversation(id: string, patch: Record<string, unknown>) {
+export async function updateConversation(
+  id: string,
+  patch: Record<string, unknown>,
+) {
   const convo = await readConversation(id);
   Object.assign(convo, patch);
-  await writeAtomic(id, convo);
+  await writeAtomic(filePath(id), JSON.stringify(convo, null, 2));
 }
+
