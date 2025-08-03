@@ -27,7 +27,7 @@ import SolutionModal from "./SolutionModal";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
-import agentImg from "@/../assets/agent_1.png";
+import assistantImg from "@/../assets/agent_1.png";
 
 type Turn = { role: "user" | "assistant"; text: string; time: string };
 
@@ -98,7 +98,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const [phase, setPhase] = useState<
     "idle" | "intro" | "collect" | "closing" | "ended"
   >("idle");
-  const [activeSpeaker, setActiveSpeaker] = useState<"user" | "agent" | null>(
+  const [activeSpeaker, setActiveSpeaker] = useState<
+    "user" | "assistant" | null
+  >(
     null,
   );
   
@@ -190,8 +192,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     onMessage: (m) => {
       setInterim(null);
       setPhase((p) => (p === "intro" && m.source === "user" ? "collect" : p));
-      setActiveSpeaker(m.source === "user" ? "user" : "agent");
-      setIsSpeaking(m.source === "agent");
+      setActiveSpeaker(m.source === "user" ? "user" : "assistant");
+      setIsSpeaking(m.source === "assistant");
       setIsListening(m.source === "user");
 
       const msg: Turn = {
@@ -260,7 +262,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     closingHandled.current = true;
 
     const transcript = messagesRef.current
-      .map((m) => `${m.role === "user" ? "User" : "Agent"}: ${m.text}`)
+      .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`)
       .join("\n");
 
     try {
@@ -371,7 +373,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     hr: {
       title: "JEDNO AI rješenje",
       subtitle: "za 90 sekundi",
-      description: "Specijalizirani smo za AI savjetovanje i izgradnju konkretnih rješenja. Ovaj agent demonstrira kako umjetna inteligencija može transformirati vaše poslovanje.",
+      description: "Specijalizirani smo za AI savjetovanje i izgradnju konkretnih rješenja. Ovaj assistant demonstrira kako umjetna inteligencija može transformirati vaše poslovanje.",
       startCall: "Pokreni AI razgovor",
       switchToChat: "Preferiram chat",
       mute: "Mute",
@@ -391,7 +393,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     en: {
       title: "ONE AI solution",
       subtitle: "in 90 seconds",
-      description: "We are a team specialized in AI consulting and building concrete solutions. This agent demonstrates how artificial intelligence can transform your business.",
+      description: "We are a team specialized in AI consulting and building concrete solutions. This assistant demonstrates how artificial intelligence can transform your business.",
       startCall: "Start AI conversation",
       switchToChat: "Prefer chat",
       mute: "Mute",
@@ -470,7 +472,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       try {
         const data = JSON.parse(event.data as string);
         if (data.audio_output?.data) {
-          setActiveSpeaker("agent");
+          setActiveSpeaker("assistant");
           setIsSpeaking(true);
           player.enqueueBase64(data.audio_output.data);
         }
