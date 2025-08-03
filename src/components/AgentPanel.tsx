@@ -192,7 +192,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setInterim(null);
       setPhase((p) => (p === "intro" && m.source === "user" ? "collect" : p));
       setActiveSpeaker(m.source === "user" ? "user" : "assistant");
-      setIsSpeaking(m.source === "ai");
+      setIsSpeaking(m.source === "assistant");
       setIsListening(m.source === "user");
 
       const msg: Turn = {
