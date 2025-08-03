@@ -26,7 +26,6 @@ import SolutionModal from "./SolutionModal";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
-import assistantImg from "@/../assets/agent_1.png";
 
 type Turn = { role: "user" | "assistant"; text: string; time: string };
 
