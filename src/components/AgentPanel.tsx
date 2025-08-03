@@ -92,9 +92,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   // Web-Audio za ElevenLabs TTS
   const audioCtxRef = useRef<AudioContext | null>(null);
   const contactRef = useRef<{ email: string; phone: string } | null>(null);
-  const openContactResolver = useRef<
-    ((d: { email: string; phone: string }) => void) | null
-  >(null);
+  const openContactResolver = useRef<(() => void) | null>(null);
 
   const messagesRef = useRef<Turn[]>([]);
   useEffect(() => {
@@ -220,11 +218,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     },
     onError: (e) => console.error("[conversation-error]", e),
     clientTools: {
-      openContactConfirm: async () =>
-        new Promise<{ email: string; phone: string }>((resolve) => {
-          openContactResolver.current = resolve;
-          setContactOpen(true);
-        }),
+      openContactConfirm: () => {
+        setContactOpen(true);
+        return new Promise<void>((resolve) => {
+          openContactResolver.current = () => {
+            resolve();
+          };
+        }) as unknown as any; // <= satisfy lib typing
+      },
     },
   });
 
@@ -539,7 +540,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   async function handleSaveContact(email: string, phone: string) {
     // reply to openContactConfirm, if waiting
-    openContactResolver.current?.({ email, phone });
+    openContactResolver.current?.();
     openContactResolver.current = null;
 
     await fetch("/api/agent", {
@@ -781,7 +782,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         onSave={handleSaveContact}
         onClose={() => setContactOpen(false)}
         onDecline={() => {
-          openContactResolver.current?.({ email: "", phone: "" });
+          openContactResolver.current?.();
           openContactResolver.current = null;
           localStorage.setItem("contactDone", "yes");
           setContactSubmitted(true);
