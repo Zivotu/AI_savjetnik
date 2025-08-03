@@ -465,8 +465,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      await (startSession as unknown as any)({
+      await startSession({
         agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
+        connectionType: "websocket",
       });
       setSessionActive(true);
       setAvatarVisible(true);
@@ -522,6 +523,15 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         text: `CONTACT::${email}|${phone}`,
       }),
     });
+    await fetch("/api/sendEmail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        phone,
+        painPoints: [], // TODO: puniti kad budeš imao sažetak
+      }),
+    });
     localStorage.setItem("contactDone", "yes");
     setContactSubmitted(true);
     setContactOpen(false);
@@ -556,11 +566,12 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   async function ensureSession() {
     if (!sessionActive && mode === "voice") {
-    await (startSession as unknown as any)({
-      agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
-    });
-    setSessionActive(true);
-    setAvatarVisible(true);
+      await startSession({
+        agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
+        connectionType: "websocket",
+      });
+      setSessionActive(true);
+      setAvatarVisible(true);
     }
   }
 
