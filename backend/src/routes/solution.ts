@@ -36,7 +36,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     await transporter.sendMail({
       from: `"NeuroBiz Bot" <${process.env.SMTP_USER}>`,
-      to: "info@neurobiz.hr", // Možeš staviti i više primatelja
+      to: "info@neurobiz.me", // Možeš staviti i više primatelja
       subject: "Novi lead s NeuroBiz weba",
       html: mailContent
     });
