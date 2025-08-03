@@ -1,4 +1,4 @@
-import agentImg from "@/assets/agent.png";
+import agentImg from "@/assets/agent_1.png";
 
 interface Props {
   isListening: boolean;

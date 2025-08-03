@@ -14,6 +14,13 @@ interface AgentPanelProps {
   language: "hr" | "en";
 }
 
+interface ConversationMessage {
+  message: string;
+  source: "user" | "ai";
+  type?: string;
+  function?: { name?: string };
+}
+
 const AgentPanel: React.FC<AgentPanelProps> = () => {
   const [phase, setPhase] = useState<"idle" | "intro" | "collect" | "closing" | "ended">("idle");
   const [mode, setMode] = useState<"voice" | "chat">("voice");
@@ -23,8 +30,8 @@ const AgentPanel: React.FC<AgentPanelProps> = () => {
   const [sending, setSending] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState<"user" | "agent" | null>(null);
 
-    const { startSession, endSession, sendUserMessage } = useConversation({
-    onMessage: async (m) => {
+  const { startSession, endSession, sendUserMessage } = useConversation({
+    onMessage: async (m: ConversationMessage) => {
       if (m.type === "function" && m.function?.name === "end_call") {
         await endSession();
         setPhase("ended");
@@ -52,8 +59,8 @@ const AgentPanel: React.FC<AgentPanelProps> = () => {
     },
     onConnect: () => setPhase("collect"),
     onDisconnect: () => setActiveSpeaker(null),
-      onError: (e) => console.error("[conversation-error]", e),
-    });
+    onError: (e) => console.error("[conversation-error]", e),
+  });
 
     const finalize = async (url: string) => {
       const audio = new Audio(url);
@@ -65,8 +72,11 @@ const AgentPanel: React.FC<AgentPanelProps> = () => {
       };
     };
 
-    const startVoice = async () => {
-    await startSession({ agentId: import.meta.env.VITE_ELEVEN_AGENT_ID });
+  const startVoice = async () => {
+    await startSession({
+      agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
+      connectionType: "webrtc",
+    });
     setPhase("intro");
   };
 
