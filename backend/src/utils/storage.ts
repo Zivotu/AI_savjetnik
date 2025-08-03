@@ -5,7 +5,9 @@ const DIR = path.resolve(__dirname, '../../transcripts');
 
 type Turn = {
   role: 'user' | 'assistant' | 'tool';
-  text: string;
+  text?: string;
+  solutionText?: string;
+  cta?: string;
   phase?: 'intro' | 'collect' | 'closing' | 'ended';
   mode?: 'voice' | 'chat';
   ts?: string;
@@ -22,7 +24,7 @@ async function readConversation(id: string) {
 }
 
 export async function writeAtomic(p: string, data: string) {
-  await fs.writeFile(p, data, 'utf8'); // direktno u finalni .json
+  await fs.writeFile(p, data, "utf8");        // simple, safe on Windows
 }
 
 export async function appendTurn(id: string, turn: Turn) {
