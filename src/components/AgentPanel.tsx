@@ -91,7 +91,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const closingHandled = useRef(false);
   // Web-Audio za ElevenLabs TTS
   const audioCtxRef = useRef<AudioContext | null>(null);
-
+  const contactRef = useRef<{ email: string; phone: string } | null>(null);
   const openContactResolver = useRef<
     ((d: { email: string; phone: string }) => void) | null
   >(null);
@@ -220,12 +220,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     },
     onError: (e) => console.error("[conversation-error]", e),
     clientTools: {
-      openContactConfirm: async () => {
-        return new Promise<{ email: string; phone: string }>((resolve) => {
+      openContactConfirm: async () =>
+        new Promise<{ email: string; phone: string }>((resolve) => {
           openContactResolver.current = resolve;
           setContactOpen(true);
-        });
-      },
+        }),
     },
   });
 
@@ -273,6 +272,19 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         return;
       }
       const solutionText = `${sol.solutionText}\n${sol.cta}`;
+
+      if (contactRef.current) {
+        await fetch("/api/sendEmail", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: contactRef.current.email,
+            phone: contactRef.current.phone,
+            painPoints: [], // can be filled later
+            proposal: solutionText, // NEW – agent’s suggestion
+          }),
+        });
+      }
 
       setSolutionTextState(solutionText);
       setSolutionOpen(true);
@@ -539,12 +551,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         text: `CONTACT::${email}|${phone}`,
       }),
     });
-    await fetch("/api/sendEmail", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, phone, painPoints: [] }),
-    });
     localStorage.setItem("contactDone", "yes");
+    contactRef.current = { email, phone };
     setContactSubmitted(true);
     setContactOpen(false);
   }
@@ -772,6 +780,13 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         open={contactOpen}
         onSave={handleSaveContact}
         onClose={() => setContactOpen(false)}
+        onDecline={() => {
+          openContactResolver.current?.({ email: "", phone: "" });
+          openContactResolver.current = null;
+          localStorage.setItem("contactDone", "yes");
+          setContactSubmitted(true);
+          setContactOpen(false);
+        }}
       />
       <SolutionModal
         open={solutionOpen}

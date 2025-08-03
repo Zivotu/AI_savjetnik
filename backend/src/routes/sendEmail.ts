@@ -11,15 +11,16 @@ interface SendEmailBody {
   email: string;
   phone: string;
   painPoints?: string[];
+  proposal?: string;
 }
 
 /**
  * POST  /api/sendEmail
- * Body: { email, phone, painPoints[] }
+ * Body: { email, phone, painPoints[], proposal }
  */
 router.post("/", async (req: Request, res: Response) => {
   /*  cast → avoids “implicit any” without generics */
-  const { email, phone, painPoints = [] } = req.body as SendEmailBody;
+  const { email, phone, painPoints = [], proposal } = req.body as SendEmailBody;
 
   try {
     /* 1) Nodemailer transporter */
@@ -45,6 +46,7 @@ router.post("/", async (req: Request, res: Response) => {
         <p><b>Email:</b> ${email}</p>
         <p><b>Telefon:</b> ${phone}</p>
         <p><b>Bolne točke:</b> ${painPoints.join(", ")}</p>
+        <p><b>Prijedlog:</b> ${proposal ?? ""}</p>
       `
     });
 

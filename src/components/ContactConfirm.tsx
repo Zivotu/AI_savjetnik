@@ -9,9 +9,17 @@ interface Props {
   defaultPhone?: string;
   onSave: (email: string, phone: string) => void;
   onClose: () => void;
+  onDecline?: () => void;
 }
 
-export default function ContactConfirm({ open, defaultEmail = "", defaultPhone = "", onSave, onClose }: Props) {
+export default function ContactConfirm({
+  open,
+  defaultEmail = "",
+  defaultPhone = "",
+  onSave,
+  onClose,
+  onDecline,
+}: Props) {
   const [email, setEmail] = useState(defaultEmail);
   const [phone, setPhone] = useState(defaultPhone);
   const [dirty, setDirty] = useState(false);
@@ -51,8 +59,11 @@ export default function ContactConfirm({ open, defaultEmail = "", defaultPhone =
         </div>
 
         <DialogFooter>
+          <Button variant="outline" onClick={onDecline}>
+            Ne želim ponudu
+          </Button>
           <Button disabled={!ok} onClick={() => onSave(email.trim(), phone.trim())}>
-            Potvrdi
+            Spremi
           </Button>
         </DialogFooter>
       </DialogContent>
