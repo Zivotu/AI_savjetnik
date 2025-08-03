@@ -84,7 +84,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     () => localStorage.getItem("consent") === "yes",
   );
   const [input, setInput] = useState("");
-  the [sending, setSending] = useState(false);
+  const [sending, setSending] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(
     () => localStorage.getItem("contactDone") === "yes",
