@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
 import SolutionModal from "./SolutionModal";
@@ -606,8 +607,20 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   };
 
   return (
-    <div className="glass-strong rounded-3xl p-8 shadow-medium h-full">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+    <div className="relative rounded-3xl overflow-hidden p-8 h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div
+          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-l from-pink-500/10 to-blue-500/10 rounded-full"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        />
+      </div>
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
         <VoiceAgentDisplay
           title={currentTexts.title}
           subtitle={currentTexts.subtitle}
@@ -625,32 +638,28 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">
-              Transkript
-            </h3>
+            <h3 className="text-lg font-semibold text-white">Transkript</h3>
           </div>
           {phase === "collect" && messages.length === 0 && (
-            <p className="text-xs opacity-60">🎙️ Snimamo…</p>
+            <p className="text-xs text-slate-300">🎙️ Snimamo…</p>
           )}
 
           <div
-            className="h-72 lg:h-80 overflow-y-auto rounded-lg"
+            className="h-72 lg:h-80 overflow-y-auto rounded-2xl bg-white/10 backdrop-blur-lg p-4 border border-white/20"
             ref={transcriptRef}
           >
             {messages.map((m, i) => (
               <p
                 key={i}
                 className={`text-sm mb-1 ${
-                  m.role === "user"
-                    ? "text-neutral-500"
-                    : "text-neutral-900"
+                  m.role === "user" ? "text-blue-300" : "text-white"
                 }`}
               >
                 <TypeWriter text={m.text} />
               </p>
             ))}
             {interim && (
-              <p className="text-xs italic opacity-60">{interim.text}</p>
+              <p className="text-xs italic text-slate-300">{interim.text}</p>
             )}
           </div>
 
@@ -665,7 +674,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               className="mt-4 flex items-center space-x-2"
             >
               <input
-                className="w-full bg-white/60 rounded-lg px-4 py-3 text-sm placeholder:text-muted-foreground"
+                className="w-full bg-white/60 rounded-lg px-4 py-3 text-sm text-black placeholder:text-slate-500"
                 placeholder={
                   language === "hr" ? "Napišite poruku..." : "Type a message..."
                 }
@@ -678,7 +687,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               />
               <button
                 type="submit"
-                className="bg-gradient-primary text-white rounded-lg px-4 py-3 text-sm font-medium disabled:opacity-50"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg px-4 py-3 text-sm font-medium disabled:opacity-50"
                 disabled={!input.trim() || sending}
               >
                 Send
@@ -693,10 +702,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                   key={index}
                   className={`text-xs font-medium px-3 py-1 rounded-full transition-smooth ${
                     index === currentStep
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-blue-600 text-white"
                       : index < currentStep
-                        ? "bg-accent text-accent-foreground"
-                        : "bg-white/30 text-muted-foreground"
+                        ? "bg-purple-600 text-white"
+                        : "bg-white/30 text-slate-300"
                   }`}
                 >
                   {step}
@@ -705,7 +714,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
             </div>
             <div className="w-full bg-white/30 rounded-full h-2">
               <div
-                className="h-2 bg-gradient-primary rounded-full transition-all duration-1000 ease-in-out"
+                className="h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full transition-all duration-1000 ease-in-out"
                 style={{ width: `${((currentStep + 1) / 3) * 100}%` }}
               ></div>
             </div>
@@ -715,16 +724,16 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
       {contactSubmitted && (
         <button
-          className="text-xs underline text-black"
+          className="text-xs underline text-slate-200"
           onClick={() => setContactOpen(true)}
         >
           Uredi kontakt
         </button>
       )}
 
-      <div className="text-xs text-muted-foreground mt-6 text-center">
+      <div className="text-xs text-slate-300 mt-6 text-center">
         <p className="mb-1">{currentTexts.privacy}</p>
-        <button className="text-primary hover:underline font-medium">
+        <button className="text-blue-400 hover:underline font-medium">
           {currentTexts.learnMore}
         </button>
       </div>
