@@ -84,7 +84,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     () => localStorage.getItem("consent") === "yes",
   );
   const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
+  the [sending, setSending] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(
     () => localStorage.getItem("contactDone") === "yes",
@@ -385,7 +385,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       privacy: (
         <>
           Razgovor se snima i transkribira radi poboljšanja usluge; podaci se
-          čuvaju šifrirano i usklađeni su s GDPR-om.{" "}
+          čuvaju šifrirano i usklađeni su s GDPR-om{" "}
           <a className="underline" href="/privacy">
             Detalji o obradi podataka
           </a>
@@ -406,7 +406,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       privacy: (
         <>
           Conversation is recorded and transcribed to improve the service; data
-          is stored encrypted and compliant with GDPR.{" "}
+          is stored encrypted and compliant with GDPR{" "}
           <a className="underline" href="/privacy">
             Details about data processing
           </a>
