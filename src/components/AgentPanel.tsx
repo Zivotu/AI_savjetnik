@@ -456,24 +456,22 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         mode: "voice",
       }),
     });
+
     setActiveSpeaker("user");
+
     setPhase("intro");
     startAt.current = Date.now();
 
     try {
-      // traži dopuštenje za mikrofon
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      /** ➊ pokreni ElevenLabs sesiju — WebSocket mod */
-      await startSession({
+      await (startSession as unknown as any)({
         agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
-        connectionType: "websocket", // ← obavezno navedi “websocket”
       });
-
       setSessionActive(true);
       setAvatarVisible(true);
 
-      /** ➋ nakon COLLECT_TIMEOUT_MS sekundi zatvaramo i tražimo rješenje */
+      // 4️⃣ nakon timeouta finaliziraj
       timer.current = setTimeout(() => {
         setPhase("closing");
         finalize();
@@ -483,7 +481,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       alert("Nemoguće pokrenuti glasovni razgovor – vidi konzolu.");
       setPhase("idle");
     }
-
   }
 
   function stopVoice() {
@@ -557,19 +554,15 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     setSending(false);
   }
 
-    async function ensureSession() {
-      if (!sessionActive && mode === "voice") {
-        await (
-          startSession as unknown as (
-            opts: { agentId: string }
-          ) => Promise<void>
-        )({
-          agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
-        });
-        setSessionActive(true);
-        setAvatarVisible(true);
-      }
+  async function ensureSession() {
+    if (!sessionActive && mode === "voice") {
+    await (startSession as unknown as any)({
+      agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
+    });
+    setSessionActive(true);
+    setAvatarVisible(true);
     }
+  }
 
   return (
     <div className="glass-strong rounded-3xl p-8 shadow-medium h-full">
