@@ -1,3 +1,4 @@
+// vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -10,6 +11,7 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
+      // sada @/assets/agent_1.png pokazuje na <projectRoot>/src/assets/agent_1.png
       "@": path.resolve(__dirname, "./src"),
     },
   },
@@ -17,21 +19,18 @@ export default defineConfig(({ mode }) => ({
     host: "localhost",
     port: 5173,
     proxy: {
-      // HTTP API proxy
       "/api": {
         target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
         ws: true,
       },
-      // WebSocket proxy for STT
       "/stt": {
         target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
         ws: true,
       },
-      // WebSocket proxy for EVI
       "/evi": {
         target: "http://localhost:3000",
         changeOrigin: true,

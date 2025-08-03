@@ -1,9 +1,10 @@
+@import "./styles/global.css";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import "./styles/global.css";
+
 
 /* Neurobiz Design System - Pastel colors, gradients, glassy effects */
 
