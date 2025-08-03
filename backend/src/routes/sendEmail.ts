@@ -39,7 +39,7 @@ router.post("/", async (req: Request, res: Response) => {
     /* 2) Send e-mail */
     await transporter.sendMail({
       from: `"NeuroBiz Bot" <${process.env.SMTP_USER}>`,
-      to: "¸info@neurobiz.me",
+      to: "info@neurobiz.me",
       subject: "Novi lead s NeuroBiz weba",
       html: `
         <h2>Novi lead</h2>

@@ -37,8 +37,8 @@ Return plain text only.`;
     return {
         solutionText: res.choices[0].message.content?.trim() || "",
         cta: lang === "hr"
-            ? "Nazovite nas na +385 1 XXX XXX ili napišite 'DA' pa vas zovemo."
-            : "Call us at +385 1 XXX XXX or reply 'YES' and we'll call you.",
+            ? "Nazovite nas na +385 91 30 66 505 ili pričekajte da Vam odgovorimo s konkretnijim prijedlogom putem elektroničke pošte."
+            : "Call us at +385 91 30 66 505 or reply 'YES' and we'll call you.",
     };
 }
 async function summarizeConversation(transcript, lang) {
