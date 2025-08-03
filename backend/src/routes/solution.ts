@@ -1,39 +1,50 @@
 import { Router, Request, Response } from "express";
-import { getSolution } from "../utils/llm";
-import { appendTurn } from "../utils/storage";
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const router = Router();
 
 /**
  * ElevenLabs server-tool webhook.
- * Body: { summary: string, language: "hr" | "en" }
- * Header "x-conversation-id" carries conversationId.
+ * Body: { email: string, phone: string, painPoints: string[] }
  */
 router.post("/", async (req: Request, res: Response) => {
-  const { summary, language } = req.body as { summary: string; language: "hr" | "en" };
-  const conversationId = (req.headers["x-conversation-id"] as string) || "unknown";
+  const { email, phone, painPoints } = req.body;
 
   try {
-    // getSolution vraća { solutionText: string; cta: string }
-    const { solutionText, cta } = await getSolution(summary, language);
-
-    // spremi glavni tekst rješenja
-    await appendTurn(conversationId, {
-      role: "tool",
-      text: solutionText
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === "true", // SSL (465) = true
+      requireTLS: process.env.SMTP_REQUIRE_TLS === "true", // STARTTLS (587)
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      },
+      // Ako koristiš shared hosting s lošim certifikatima:
+      // tls: { rejectUnauthorized: false }
     });
 
-    // spremi CTA kao zaseban turn (ili ih kombinirajte ako više voliš jedno polje)
-    await appendTurn(conversationId, {
-      role: "tool",
-      text: cta
+    const mailContent = `
+      <h2>Novi upit sa NeuroBiz asistenta</h2>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Telefon:</strong> ${phone}</p>
+      <p><strong>Bolne točke:</strong> ${Array.isArray(painPoints) ? painPoints.join(", ") : ""}</p>
+    `;
+
+    await transporter.sendMail({
+      from: `"NeuroBiz Bot" <${process.env.SMTP_USER}>`,
+      to: "team@neurobiz.hr", // Možeš staviti i više primatelja
+      subject: "Novi lead s NeuroBiz weba",
+      html: mailContent
     });
 
-    // vrati objekt natrag klijentu
-    res.json({ solutionText, cta });
+    res.json({ status: "ok" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "solution_failed" });
+    console.error("❌ Slanje maila nije uspjelo:", err);
+    res.status(500).json({ error: "email_failed" });
   }
 });
 
