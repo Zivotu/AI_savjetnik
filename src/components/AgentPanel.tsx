@@ -218,13 +218,13 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     },
     onError: (e) => console.error("[conversation-error]", e),
     clientTools: {
-      openContactConfirm: () => {
+      openContactConfirm: (_params: unknown) => {
         setContactOpen(true);
         return new Promise<void>((resolve) => {
           openContactResolver.current = () => {
             resolve();
           };
-        }) as unknown as any; // <= satisfy lib typing
+        });
       },
     },
   });
