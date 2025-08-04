@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import BlogCard from '@/components/BlogCard';
@@ -38,6 +38,30 @@ const BlogPost = () => {
         }
       });
   }, [slug, language]);
+
+  const processedContent = useMemo(() => {
+    if (!currentPost) return '';
+
+    const decodeHtml = (html: string) => {
+      const textarea = document.createElement('textarea');
+      textarea.innerHTML = html;
+      return textarea.value;
+    };
+
+    const decoded = decodeHtml(currentPost.content[language]);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(decoded, 'text/html');
+
+    doc.querySelectorAll('argument[name="citation_id"]').forEach(node => {
+      const span = doc.createElement('span');
+      const citationId = node.textContent || '';
+      span.setAttribute('data-citation-id', citationId);
+      span.textContent = citationId;
+      node.replaceWith(span);
+    });
+
+    return doc.body.innerHTML;
+  }, [currentPost, language]);
 
   if (!currentPost) {
     return (
@@ -121,7 +145,7 @@ const BlogPost = () => {
           <div className="glass-strong rounded-3xl p-8 mb-12">
             <div
               className="prose prose-lg max-w-none text-foreground"
-              dangerouslySetInnerHTML={{ __html: currentPost.content[language] }}
+              dangerouslySetInnerHTML={{ __html: processedContent }}
             />
 
             <div className="flex justify-end mt-8 pt-6 border-t border-white/20">
