@@ -2,27 +2,41 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import BlogCard from '@/components/BlogCard';
-import { blogPosts } from '@/data/blogPosts';
 import { ArrowLeft, Calendar, User, Tag, Share2 } from 'lucide-react';
+
+interface Article {
+  id: string;
+  slug: string;
+  title: { hr: string; en: string };
+  excerpt: { hr: string; en: string };
+  content: { hr: string; en: string };
+  category: { hr: string; en: string };
+  featured: boolean;
+  thumbnail?: string;
+  createdAt: string;
+  author?: string;
+}
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [language, setLanguage] = useState<'hr' | 'en'>('hr');
-  const [currentPost, setCurrentPost] = useState<any>(null);
-  const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
+  const [currentPost, setCurrentPost] = useState<Article | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<Article[]>([]);
 
   useEffect(() => {
-    const post = blogPosts.find(p => p.slug === slug);
-    if (post) {
-      setCurrentPost(post);
-      
-      // Find related posts (same category, excluding current)
-      const related = blogPosts
-        .filter(p => p.id !== post.id && p.category[language] === post.category[language])
-        .slice(0, 3);
-      setRelatedPosts(related);
-    }
+    fetch('/api/articles')
+      .then(r => r.json())
+      .then((posts: Article[]) => {
+        const post = posts.find(p => p.slug === slug);
+        if (post) {
+          setCurrentPost(post);
+          const related = posts
+            .filter(p => p.id !== post.id && p.category[language] === post.category[language])
+            .slice(0, 3);
+          setRelatedPosts(related);
+        }
+      });
   }, [slug, language]);
 
   if (!currentPost) {
@@ -92,13 +106,13 @@ const BlogPost = () => {
                 <Tag className="w-3 h-3" />
                 <span>{currentPost.category[language]}</span>
               </span>
-              <div className="flex items-center space-x-1">
-                <Calendar className="w-4 h-4" />
-                <span>{formatDate(currentPost.date)}</span>
-              </div>
+                <div className="flex items-center space-x-1">
+                  <Calendar className="w-4 h-4" />
+                  <span>{formatDate(currentPost.createdAt)}</span>
+                </div>
               <div className="flex items-center space-x-1">
                 <User className="w-4 h-4" />
-                <span>{currentPost.author}</span>
+                <span>{currentPost.author ?? ''}</span>
               </div>
               <span>5 {currentTexts.readingTime}</span>
             </div>

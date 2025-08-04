@@ -7,28 +7,60 @@ const router = Router();
 const DIR = path.resolve(__dirname, "../../articles");
 const PASS = process.env.ADMIN_PASS as string;
 
-// auth middleware
-router.use((req: Request, res: Response, next: NextFunction) => {
-  if (req.headers["x-admin-pass"] !== PASS) return res.sendStatus(401);
-  next();
-});
-
 interface Article {
   id: string;
-  title: string;
-  content: string;
+  slug: string;
+  title: { hr: string; en: string };
+  content: { hr: string; en: string };
+  excerpt: { hr: string; en: string };
+  category: { hr: string; en: string };
+  featured: boolean;
+  thumbnail?: string;
+  createdAt: string;
 }
 
-// list articles
+function buildArticle(id: string, body: any): Article {
+  const content = {
+    hr: body.contentHr ?? "",
+    en: body.contentEn ?? "",
+  };
+  const excerpt = {
+    hr: (body.excerptHr ?? content.hr.slice(0, 120)),
+    en: (body.excerptEn ?? content.en.slice(0, 120)),
+  };
+  return {
+    id,
+    slug: body.slug ?? "",
+    title: {
+      hr: body.titleHr ?? "",
+      en: body.titleEn ?? "",
+    },
+    content,
+    excerpt,
+    category: {
+      hr: body.categoryHr ?? "",
+      en: body.categoryEn ?? "",
+    },
+    featured: Boolean(body.featured),
+    thumbnail: body.thumbnail ?? undefined,
+    createdAt: body.createdAt ?? new Date().toISOString(),
+  };
+}
+
+// list articles (public)
 router.get("/", async (_req: Request, res: Response) => {
-  const files = (await fs.readdir(DIR)).filter(f => f.endsWith(".json"));
-  const data: Article[] = await Promise.all(
-    files.map(async file => JSON.parse(await fs.readFile(path.join(DIR, file), "utf8")))
-  );
-  res.json(data);
+  try {
+    const files = (await fs.readdir(DIR)).filter(f => f.endsWith(".json"));
+    const data: Article[] = await Promise.all(
+      files.map(async file => JSON.parse(await fs.readFile(path.join(DIR, file), "utf8")))
+    );
+    res.json(data);
+  } catch {
+    res.json([]);
+  }
 });
 
-// get single article
+// get single article (public)
 router.get("/:id", async (req: Request, res: Response) => {
   const p = path.join(DIR, `${req.params.id}.json`);
   try {
@@ -39,10 +71,17 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
+// auth middleware for mutating routes
+router.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.headers["x-admin-pass"] !== PASS) return res.sendStatus(401);
+  next();
+});
+
 // create article
 router.post("/", async (req: Request, res: Response) => {
   const id = randomUUID();
-  const article: Article = { id, title: req.body.title ?? "", content: req.body.content ?? "" };
+  const article = buildArticle(id, req.body);
+  await fs.mkdir(DIR, { recursive: true });
   await fs.writeFile(path.join(DIR, `${id}.json`), JSON.stringify(article, null, 2));
   res.status(201).json(article);
 });
@@ -51,7 +90,7 @@ router.post("/", async (req: Request, res: Response) => {
 router.put("/:id", async (req: Request, res: Response) => {
   const p = path.join(DIR, `${req.params.id}.json`);
   try {
-    const article: Article = { id: req.params.id, title: req.body.title ?? "", content: req.body.content ?? "" };
+    const article = buildArticle(req.params.id, req.body);
     await fs.writeFile(p, JSON.stringify(article, null, 2));
     res.json(article);
   } catch {

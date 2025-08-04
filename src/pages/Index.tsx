@@ -1,11 +1,20 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import AgentPanel from '@/components/AgentPanel';
-import QuestionCard from '@/components/QuestionCard';
 import QuestionModal from '@/components/QuestionModal';
 import BlogCard from '@/components/BlogCard';
-import { blogPosts, categories } from '@/data/blogPosts';
-import { Filter, Calendar, Tag } from 'lucide-react';
+
+interface Article {
+  id: string;
+  slug: string;
+  title: { hr: string; en: string };
+  excerpt: { hr: string; en: string };
+  content: { hr: string; en: string };
+  category: { hr: string; en: string };
+  featured: boolean;
+  thumbnail?: string;
+  createdAt: string;
+}
 
 const Index = () => {
   const [language, setLanguage] = useState<'hr' | 'en'>('hr');
@@ -37,9 +46,18 @@ const Index = () => {
   };
 
   const currentTexts = texts[language];
-  const featuredPosts = blogPosts.filter(post => post.featured);
-  const regularPosts = blogPosts.filter(post => !post.featured);
-  const currentCategories = categories[language];
+  const [posts, setPosts] = useState<Article[]>([]);
+
+  useEffect(() => {
+    fetch('/api/articles')
+      .then(r => r.json())
+      .then(setPosts);
+  }, []);
+
+  const featuredPosts = posts.filter(post => post.featured);
+  const regularPosts = posts.filter(post => !post.featured);
+  const dynamicCategories = Array.from(new Set(posts.map(p => p.category[language])));
+  const currentCategories = [language === 'hr' ? 'Sve kategorije' : 'All categories', ...dynamicCategories];
 
   const filteredPosts = selectedCategory === 0 
     ? regularPosts 
@@ -67,13 +85,13 @@ const Index = () => {
       <section className="container mx-auto px-4 pb-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {blogPosts.map(post => (
+            {posts.map(post => (
               <BlogCard
                 key={post.id}
                 title={post.title[language]}
                 excerpt={post.excerpt[language]}
                 category={post.category[language]}
-                date={formatDate(post.date)}
+                date={formatDate(post.createdAt)}
                 slug={post.slug}
                 featured={post.featured}
                 thumbnail={post.thumbnail}
