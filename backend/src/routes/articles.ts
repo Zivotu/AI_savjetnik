@@ -7,6 +7,10 @@ const router = Router();
 const DIR = path.resolve(__dirname, "../../articles");
 const PASS = process.env.ADMIN_PASS as string;
 
+function stripHtml(text: string) {
+  return text.replace(/<[^>]*>/g, "");
+}
+
 interface Article {
   id: string;
   slug: string;
@@ -25,8 +29,8 @@ function buildArticle(id: string, body: any): Article {
     en: body.contentEn ?? "",
   };
   const excerpt = {
-    hr: (body.excerptHr ?? content.hr.slice(0, 120)),
-    en: (body.excerptEn ?? content.en.slice(0, 120)),
+    hr: stripHtml(body.excerptHr ?? content.hr).slice(0, 120),
+    en: stripHtml(body.excerptEn ?? content.en).slice(0, 120),
   };
   return {
     id,
