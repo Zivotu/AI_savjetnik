@@ -63,13 +63,6 @@ const Index = () => {
     ? regularPosts 
     : regularPosts.filter(post => post.category[language] === currentCategories[selectedCategory]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return language === 'hr' 
-      ? date.toLocaleDateString('hr-HR', { year: 'numeric', month: 'long', day: 'numeric' })
-      : date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  };
-
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <Header language={language} onLanguageChange={setLanguage} />
@@ -90,8 +83,6 @@ const Index = () => {
                 key={post.id}
                 title={post.title[language]}
                 excerpt={post.excerpt[language]}
-                category={post.category[language]}
-                date={formatDate(post.createdAt)}
                 slug={post.slug}
                 featured={post.featured}
                 thumbnail={post.thumbnail}
