@@ -47,6 +47,16 @@ npm run dev:server
 
 To disable the speech-to-text proxy (helpful when using the free ElevenLabs plan), create a `.env` file and set `DISABLE_STT=1` before starting the backend.
 
+### Troubleshooting
+
+If the development server reports `Failed to resolve import "dompurify"`, ensure that all dependencies are installed:
+
+```sh
+npm install dompurify
+```
+
+DOMPurify is used to sanitize blog post content, so the package must be present for the blog page to load correctly.
+
 
 **Edit a file directly in GitHub**
 
