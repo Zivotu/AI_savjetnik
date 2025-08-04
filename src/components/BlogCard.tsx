@@ -1,19 +1,17 @@
-import { Calendar, Tag, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 interface BlogCardProps {
   title: string;
   excerpt: string;
-  category: string;
-  date: string;
   slug: string;
   thumbnail?: string;
   featured?: boolean;
 }
 
-const BlogCard = ({ title, excerpt, category, date, slug, thumbnail, featured = false }: BlogCardProps) => {
+const BlogCard = ({ title, excerpt, slug, thumbnail, featured = false }: BlogCardProps) => {
   const handleClick = () => {
-    // Navigate to blog post (demo only)
-    window.location.href = `/blog/${slug}`;
+    // Navigate to article
+    window.location.href = `/articles/${slug}`;
   };
 
   return (
@@ -37,14 +35,6 @@ const BlogCard = ({ title, excerpt, category, date, slug, thumbnail, featured = 
             <div className="text-white text-4xl font-bold opacity-20">AI</div>
           </div>
         )}
-        
-        {/* Category badge */}
-        <div className="absolute top-4 left-4">
-          <span className="inline-flex items-center space-x-1 bg-white/90 backdrop-blur-sm text-xs font-medium px-3 py-1 rounded-full">
-            <Tag className="w-3 h-3" />
-            <span>{category}</span>
-          </span>
-        </div>
 
         {featured && (
           <div className="absolute top-4 right-4">
@@ -57,12 +47,6 @@ const BlogCard = ({ title, excerpt, category, date, slug, thumbnail, featured = 
 
       {/* Content */}
       <div className="p-6">
-        {/* Date */}
-        <div className="flex items-center space-x-2 text-muted-foreground text-xs mb-3">
-          <Calendar className="w-3 h-3" />
-          <span>{date}</span>
-        </div>
-
         {/* Title */}
         <h3 className="text-lg font-bold text-foreground mb-3 leading-tight group-hover:text-primary transition-colors">
           {title}

@@ -1,15 +1,9 @@
 import { useEffect, useState, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody as Tbody,
-  TableHead as Th,
-  TableHeader as Thead,
-  TableRow as Tr,
-  TableCell as Td,
-} from "@/components/ui/table";
+import BlogCard from "@/components/BlogCard";
+import RichTextEditor from "@/components/RichTextEditor";
+import { toast } from "@/use-toast";
 
 interface Article {
   id: string;
@@ -29,18 +23,7 @@ interface Props {
 
 export default function Articles({ pass }: Props) {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [form, setForm] = useState<{
-    id?: string;
-    slug: string;
-    titleHr: string;
-    titleEn: string;
-    contentHr: string;
-    contentEn: string;
-    categoryHr: string;
-    categoryEn: string;
-    featured: boolean;
-    thumbnail?: string;
-  }>({
+  const initialForm = {
     slug: "",
     titleHr: "",
     titleEn: "",
@@ -49,7 +32,9 @@ export default function Articles({ pass }: Props) {
     categoryHr: "",
     categoryEn: "",
     featured: false,
-  });
+  };
+  const [form, setForm] = useState<typeof initialForm & { id?: string; thumbnail?: string }>(initialForm);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     fetch("/api/articles")
@@ -88,16 +73,10 @@ export default function Articles({ pass }: Props) {
             ? prev.map(x => (x.id === a.id ? a : x))
             : [...prev, a]
         );
-        setForm({
-          slug: "",
-          titleHr: "",
-          titleEn: "",
-          contentHr: "",
-          contentEn: "",
-          categoryHr: "",
-          categoryEn: "",
-          featured: false,
-        });
+        setForm(initialForm);
+        setShowForm(false);
+        toast({ description: "Članak uspješno dodan" });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
   }
 
@@ -114,6 +93,7 @@ export default function Articles({ pass }: Props) {
       featured: a.featured,
       thumbnail: a.thumbnail,
     });
+    setShowForm(true);
   }
 
   function handleFile(e: ChangeEvent<HTMLInputElement>) {
@@ -136,36 +116,37 @@ export default function Articles({ pass }: Props) {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Članci</h1>
-      <Table>
-        <Thead>
-          <Tr>
-            <Th>ID</Th>
-            <Th>Naslov</Th>
-            <Th></Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {articles.map(a => (
-            <Tr key={a.id}>
-              <Td className="font-mono text-xs">{a.id.slice(0, 8)}</Td>
-              <Td>{a.title.hr}</Td>
-              <Td className="text-right space-x-2">
-                <Button size="sm" variant="ghost" onClick={() => handleEdit(a)}>
-                  ✏️
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleDelete(a.id)}
-                >
-                  🗑️
-                </Button>
-              </Td>
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
 
+      {!showForm && (
+        <>
+          <Button className="mb-4" onClick={() => { setForm(initialForm); setShowForm(true); }}>
+            Novi članak
+          </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {articles.map(a => (
+              <div key={a.id} className="relative">
+                <BlogCard
+                  title={a.title.hr}
+                  excerpt={a.excerpt.hr}
+                  slug={a.slug}
+                  featured={a.featured}
+                  thumbnail={a.thumbnail}
+                />
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <Button size="sm" variant="secondary" onClick={e => { e.stopPropagation(); handleEdit(a); }}>
+                    Edit
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={e => { e.stopPropagation(); handleDelete(a.id); }}>
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {showForm && (
       <form onSubmit={handleSubmit} className="mt-6 space-y-2">
         <Input
           placeholder="Slug"
@@ -182,17 +163,13 @@ export default function Articles({ pass }: Props) {
           value={form.titleEn}
           onChange={e => setForm({ ...form, titleEn: e.target.value })}
         />
-        <Textarea
-          placeholder="Sadržaj HR"
+        <RichTextEditor
           value={form.contentHr}
-          onChange={e => setForm({ ...form, contentHr: e.target.value })}
-          className="h-40"
+          onChange={val => setForm({ ...form, contentHr: val })}
         />
-        <Textarea
-          placeholder="Sadržaj EN"
+        <RichTextEditor
           value={form.contentEn}
-          onChange={e => setForm({ ...form, contentEn: e.target.value })}
-          className="h-40"
+          onChange={val => setForm({ ...form, contentEn: val })}
         />
         <Input
           placeholder="Kategorija HR"
@@ -214,27 +191,15 @@ export default function Articles({ pass }: Props) {
         </div>
         <Input type="file" accept="image/*" onChange={handleFile} />
         <Button type="submit">{form.id ? "Spremi" : "Dodaj"}</Button>
-        {form.id && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() =>
-              setForm({
-                slug: "",
-                titleHr: "",
-                titleEn: "",
-                contentHr: "",
-                contentEn: "",
-                categoryHr: "",
-                categoryEn: "",
-                featured: false,
-              })
-            }
-          >
-            Odustani
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => { setForm(initialForm); setShowForm(false); }}
+        >
+          Odustani
+        </Button>
       </form>
+      )}
     </div>
   );
 }
