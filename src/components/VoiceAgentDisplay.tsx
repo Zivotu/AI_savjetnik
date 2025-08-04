@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Mic, MicOff, Volume2, VolumeX, Settings, X } from "lucide-react";
+import { Play, Mic, MicOff, Volume2, VolumeX, X } from "lucide-react";
 
 interface VoiceAgentDisplayProps {
   title: string;
@@ -12,7 +12,6 @@ interface VoiceAgentDisplayProps {
   onStartChat: () => void;
   onMicToggle: () => void;
   onMuteToggle: () => void;
-  onSettingsToggle: () => void;
   onEndChat: () => void;
 }
 
@@ -27,7 +26,6 @@ export default function VoiceAgentDisplay({
   onStartChat,
   onMicToggle,
   onMuteToggle,
-  onSettingsToggle,
   onEndChat,
 }: VoiceAgentDisplayProps) {
   // local state for status text
@@ -87,11 +85,14 @@ export default function VoiceAgentDisplay({
         ) : (
           <motion.div
             key="chat-screen"
-            className="flex flex-col items-center"
+            className="relative flex flex-col items-center"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
           >
+            <span className="absolute -top-4 left-0 text-2xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Bubi
+            </span>
             <div className="relative mb-8">
               <motion.div
                 className="relative w-48 h-48 rounded-full bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-lg border border-white/20 shadow-2xl flex items-center justify-center"
@@ -191,15 +192,6 @@ export default function VoiceAgentDisplay({
                 whileTap={{ scale: 0.9 }}
               >
                 {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
-              </motion.button>
-
-              <motion.button
-                onClick={onSettingsToggle}
-                className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-lg border border-white/20 text-white flex items-center justify-center shadow-lg hover:bg-white/30 transition-all duration-300"
-                whileHover={{ scale: 1.1, y: -2 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Settings className="w-6 h-6" />
               </motion.button>
 
               <motion.button

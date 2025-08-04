@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Mail, Globe } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
 interface HeaderProps {
   language: 'hr' | 'en';
@@ -10,13 +9,17 @@ const Header = ({ language, onLanguageChange }: HeaderProps) => {
   const texts = {
     hr: {
       logo: 'Neurobiz',
-      support: 'info@neurobiz.me'
+      support: 'info@neurobiz.me',
+      contact: 'Dodaj svoje kontakt informacije',
+      question: 'Imate pitanje?'
     },
     en: {
       logo: 'Neurobiz',
-      support: 'info@neurobiz.me'
+      support: 'info@neurobiz.me',
+      contact: 'Add your contact information',
+      question: 'Have a question?'
     }
-  };
+  } as const;
 
   return (
     <header className="sticky top-0 z-50 w-full glass border-b border-white/20 backdrop-blur-xl">
@@ -30,14 +33,22 @@ const Header = ({ language, onLanguageChange }: HeaderProps) => {
           />
         </div>
 
-        {/* Right side - Question, Language switch and contact */}
+        {/* Right side - Contact, Question, Language switch and email */}
         <div className="flex items-center space-x-4">
+          {/* Contact Button */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('openContactModal'))}
+            className="bg-secondary/20 hover:bg-secondary/30 text-secondary px-3 py-2 rounded-lg text-sm font-medium transition-smooth flex items-center space-x-2"
+          >
+            <span>{texts[language].contact}</span>
+          </button>
+
           {/* Question Button */}
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('openQuestionModal'))}
             className="bg-primary/20 hover:bg-primary/30 text-primary px-3 py-2 rounded-lg text-sm font-medium transition-smooth flex items-center space-x-2"
           >
-            <span>{language === 'hr' ? 'Imate pitanje?' : 'Have a question?'}</span>
+            <span>{texts[language].question}</span>
           </button>
 
           {/* Language Switch */}

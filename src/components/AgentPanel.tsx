@@ -81,6 +81,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   );
   const [micEnabled, setMicEnabled] = useState(false);
   const [muted, setMuted] = useState(false);
+  const mutedRef = useRef(false);
   const timer = useRef<NodeJS.Timeout>();
   const startAt = useRef(0);
 
@@ -100,7 +101,18 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     messagesRef.current = messages;
   }, [messages]);
 
+  useEffect(() => {
+    mutedRef.current = muted;
+  }, [muted]);
+
+  useEffect(() => {
+    const handler = () => setContactOpen(true);
+    window.addEventListener("openContactModal", handler);
+    return () => window.removeEventListener("openContactModal", handler);
+  }, []);
+
   function playAudio(data: ArrayBuffer) {
+    if (mutedRef.current) return;
     try {
       // init ili uzmi postojeći kontekst
       const ctx =
@@ -355,7 +367,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           .
         </>
       ),
-      learnMore: "Saznaj više",
       steps: ["Uvod", "Pitanja", "Rješenje"],
     },
     en: {
@@ -375,7 +386,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           .
         </>
       ),
-      learnMore: "Learn more",
       steps: ["Intro", "Questions", "Solution"],
     },
   } as const;
@@ -598,12 +608,21 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const isListening = activeSpeaker === "user" || micEnabled;
 
   const handleStartChat = () => (consentGiven ? startVoice() : setGdprOpen(true));
-  const handleMicToggle = () => setMicEnabled((p) => !p);
-  const handleMuteToggle = () => setMuted((p) => !p);
-  const handleSettingsToggle = () => {};
+  const handleMicToggle = () =>
+    setMicEnabled((p) => {
+      if (p) setActiveSpeaker(null);
+      return !p;
+    });
+  const handleMuteToggle = () =>
+    setMuted((p) => {
+      const next = !p;
+      if (next) eviPlayerRef.current?.stop?.();
+      return next;
+    });
   const handleEndChat = () => {
     stopVoice();
     setMicEnabled(false);
+    window.location.reload();
   };
 
   return (
@@ -632,20 +651,16 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           onStartChat={handleStartChat}
           onMicToggle={handleMicToggle}
           onMuteToggle={handleMuteToggle}
-          onSettingsToggle={handleSettingsToggle}
           onEndChat={handleEndChat}
         />
 
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Transkript</h3>
-          </div>
           {phase === "collect" && messages.length === 0 && (
             <p className="text-xs text-slate-300">🎙️ Snimamo…</p>
           )}
 
           <div
-            className="h-72 lg:h-80 overflow-y-auto rounded-2xl bg-white/10 backdrop-blur-lg p-4 border border-white/20"
+            className="h-80 lg:h-96 overflow-y-auto rounded-2xl bg-white/10 backdrop-blur-lg p-4 border border-white/20"
             ref={transcriptRef}
           >
             {messages.map((m, i) => (
@@ -722,20 +737,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         </div>
       </div>
 
-      {contactSubmitted && (
-        <button
-          className="text-xs underline text-slate-200"
-          onClick={() => setContactOpen(true)}
-        >
-          Uredi kontakt
-        </button>
-      )}
-
       <div className="text-xs text-slate-300 mt-6 text-center">
         <p className="mb-1">{currentTexts.privacy}</p>
-        <button className="text-blue-400 hover:underline font-medium">
-          {currentTexts.learnMore}
-        </button>
       </div>
 
       <GdprModal
