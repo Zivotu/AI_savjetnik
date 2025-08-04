@@ -7,7 +7,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "dompurify": ["./src/lib/dompurify"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,

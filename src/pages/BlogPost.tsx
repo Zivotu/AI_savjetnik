@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import BlogCard from '@/components/BlogCard';
 import { ArrowLeft, User, Share2 } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 interface Article {
   id: string;
@@ -23,6 +24,17 @@ const BlogPost = () => {
   const [language, setLanguage] = useState<'hr' | 'en'>('hr');
   const [currentPost, setCurrentPost] = useState<Article | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Article[]>([]);
+
+  const sanitizedContent = useMemo(() => {
+    if (!currentPost) return '';
+    const transformed = currentPost.content[language]
+      .replace(/<custom-tag>/g, '<div class="custom-tag">')
+      .replace(/<\/custom-tag>/g, '</div>');
+    return DOMPurify.sanitize(transformed, {
+      ADD_TAGS: ['iframe', 'div'],
+      ADD_ATTR: ['class', 'allow', 'allowfullscreen', 'frameborder', 'scrolling']
+    });
+  }, [currentPost, language]);
 
   useEffect(() => {
     fetch('/api/articles')
@@ -121,7 +133,7 @@ const BlogPost = () => {
           <div className="glass-strong rounded-3xl p-8 mb-12">
             <div
               className="prose prose-lg max-w-none text-foreground"
-              dangerouslySetInnerHTML={{ __html: currentPost.content[language] }}
+              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
             />
 
             <div className="flex justify-end mt-8 pt-6 border-t border-white/20">
