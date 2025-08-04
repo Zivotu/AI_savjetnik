@@ -23,8 +23,7 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "dompurify": ["./src/lib/dompurify"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"]
