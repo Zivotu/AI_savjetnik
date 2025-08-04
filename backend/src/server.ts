@@ -9,6 +9,7 @@ import ttsRouter from "./routes/tts";
 import transcriptsRouter from "./routes/transcripts";
 import solutionRouter from "./routes/solution";
 import summaryRouter from "./routes/summary";
+import articlesRouter from "./routes/articles";
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api/transcripts", transcriptsRouter);
 app.use("/api/solution", solutionRouter);
 app.use("/api/summary", summaryRouter);
 app.use("/api/sendEmail", sendEmailRouter);
+app.use("/api/articles", articlesRouter);
 
 /* 404 + error */
 app.use((_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));
