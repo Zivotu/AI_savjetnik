@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
+import path from "node:path";
 
 import sendEmailRouter from "./routes/sendEmail";
 import agentRouter from "./routes/agent";
@@ -9,6 +10,7 @@ import ttsRouter from "./routes/tts";
 import transcriptsRouter from "./routes/transcripts";
 import solutionRouter from "./routes/solution";
 import summaryRouter from "./routes/summary";
+import uploadsRouter from "./routes/uploads";
 
 const app = express();
 
@@ -23,6 +25,7 @@ app.use(
   })
 );
 app.use(express.json({ limit: "4mb" }));
+app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
 app.use((req: Request, _res: Response, next: NextFunction) => {
   console.log(`${req.method} ${req.originalUrl}`);
   next();
@@ -35,6 +38,7 @@ app.use("/api/transcripts", transcriptsRouter);
 app.use("/api/solution", solutionRouter);
 app.use("/api/summary", summaryRouter);
 app.use("/api/sendEmail", sendEmailRouter);
+app.use("/api/uploads", uploadsRouter);
 
 /* 404 + error */
 app.use((_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));
