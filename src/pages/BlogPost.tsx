@@ -27,12 +27,41 @@ const BlogPost = () => {
 
   const sanitizedContent = useMemo(() => {
     if (!currentPost) return '';
-    const transformed = currentPost.content[language]
-      .replace(/<custom-tag>/g, '<div class="custom-tag">')
-      .replace(/<\/custom-tag>/g, '</div>');
-    return DOMPurify.sanitize(transformed, {
-      ADD_TAGS: ['iframe', 'div'],
-      ADD_ATTR: ['class', 'allow', 'allowfullscreen', 'frameborder', 'scrolling']
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(currentPost.content[language], 'text/html');
+
+    doc.querySelectorAll('custom-tag').forEach(el => {
+      const div = doc.createElement('div');
+      div.className = 'custom-tag';
+      div.innerHTML = el.innerHTML;
+      el.replaceWith(div);
+    });
+
+    doc
+      .querySelectorAll('argument[name="citation_id"]')
+      .forEach(el => {
+        const span = doc.createElement('span');
+        span.setAttribute(
+          'data-citation-id',
+          el.getAttribute('value') || el.textContent || ''
+        );
+        span.innerHTML = el.innerHTML;
+        el.replaceWith(span);
+      });
+
+    const html = doc.body.innerHTML;
+
+    return DOMPurify.sanitize(html, {
+      ADD_TAGS: ['iframe', 'div', 'span'],
+      ADD_ATTR: [
+        'class',
+        'allow',
+        'allowfullscreen',
+        'frameborder',
+        'scrolling',
+        'data-citation-id'
+      ]
     });
   }, [currentPost, language]);
 
