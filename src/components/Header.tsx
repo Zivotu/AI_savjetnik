@@ -8,13 +8,11 @@ interface HeaderProps {
 const Header = ({ language, onLanguageChange }: HeaderProps) => {
   const texts = {
     hr: {
-      logo: 'Neurobiz',
       support: 'info@neurobiz.me',
       contact: 'Dodaj svoje kontakt informacije',
       question: 'Imate pitanje?'
     },
     en: {
-      logo: 'Neurobiz',
       support: 'info@neurobiz.me',
       contact: 'Add your contact information',
       question: 'Have a question?'
@@ -25,15 +23,12 @@ const Header = ({ language, onLanguageChange }: HeaderProps) => {
     <header className="sticky top-0 z-50 w-full border-b border-white/20 backdrop-blur-lg bg-gray-900/50">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <a href="/" className="flex items-center space-x-2 group">
+        <a href="/" className="flex items-center group">
           <img
             src="/assets/NeuroBiz_Logo_1%20copy.png"
             alt="Neurobiz logo"
             className="h-10 w-auto transition-transform group-hover:scale-105"
           />
-          <span className="text-xl font-bold text-white group-hover:text-blue-300">
-            {texts[language].logo}
-          </span>
         </a>
 
         {/* Right side - Contact, Question, Language switch and email */}
