@@ -43,13 +43,13 @@ const HeadphonesNotification = ({ language, isVisible, onClose }: {
 
   const texts = {
     hr: {
-      mainText: "Za najbolje korisničko iskustvo predlažemo Vam da spojite slušalice",
-      subText: "Na taj način ćemo biti sigurni da kad započnemo razgovor ja neću imati problema s prepoznavanjem onoga što ste rekli i onoga što čujem sam sebe preko vaših zvučnika.",
+      mainText: "Kako bismo vam osigurali vrhunsko korisničko iskustvo, preporučujemo korištenje slušalica.",
+      subText: "Na taj će način naš sustav besprijekorno prepoznati vaš glas, bez ometanja zbog povratnog zvuka iz zvučnika.",
       closeButton: "ZATVORI"
     },
     en: {
-      mainText: "For the best user experience, we recommend connecting headphones",
-      subText: "This way we can be sure that when we start the conversation, I won't have problems recognizing what you said and what I hear myself through your speakers.",
+      mainText: "For the best user experience, we recommend using headphones.",
+      subText: "This way our system will flawlessly recognize your voice, without interference from feedback sound from the speakers.",
       closeButton: "CLOSE"
     }
   };
