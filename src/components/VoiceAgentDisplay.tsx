@@ -1,6 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Mic, MicOff, Volume2, VolumeX, X } from "lucide-react";
-import agentImg from "../../assets/Bubi_2.png";
 
 
 interface VoiceAgentDisplayProps {
@@ -141,7 +140,7 @@ export default function VoiceAgentDisplay({
   }}
   transition={{ duration: 0.6, repeat: isSpeaking ? Infinity : 0 }}
 >
-  <img src={agentImg} alt="Bubi" className="w-full h-full object-cover" />
+  <img src="/assets/Bubi_2.png" alt="Bubi" className="w-full h-full object-cover" />
 </motion.div>
 
 
