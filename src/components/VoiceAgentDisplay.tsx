@@ -56,7 +56,7 @@ export default function VoiceAgentDisplay({
               {title}
             </motion.h1>
             <motion.p
-              className="text-slate-300 text-lg mb-12 max-w-md"
+              className="text-slate-300 text-lg mb-12 max-w-md mx-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.6 }}
@@ -65,7 +65,7 @@ export default function VoiceAgentDisplay({
             </motion.p>
             <motion.button
               onClick={onStartChat}
-              className="group relative bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xl px-12 py-6 rounded-2xl flex items-center gap-4 shadow-2xl hover:shadow-blue-500/25 transition-all duration-300"
+              className="group relative mx-auto bg-gradient-to-r from-white to-gray-200 text-purple-800 text-2xl font-bold px-14 py-7 rounded-2xl flex items-center gap-4 shadow-2xl hover:shadow-purple-500/25 transition-all duration-300"
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.6, duration: 0.8, type: "spring" }}
@@ -79,7 +79,7 @@ export default function VoiceAgentDisplay({
                 <Play className="w-7 h-7" />
               </motion.div>
               {startLabel}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-200 to-purple-300 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
             </motion.button>
           </motion.div>
         ) : (

@@ -103,14 +103,12 @@ const BlogPost = () => {
       backToHome: 'Nazad na početnu',
       relatedArticles: 'Povezani članci',
       shareArticle: 'Podijeli članak',
-      readingTime: 'min čitanja',
       author: 'Autor'
     },
     en: {
       backToHome: 'Back to home',
       relatedArticles: 'Related Articles',
       shareArticle: 'Share article',
-      readingTime: 'min read',
       author: 'Author'
     }
   };
@@ -125,19 +123,18 @@ const BlogPost = () => {
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => navigate('/')}
-            className="inline-flex items-center space-x-2 text-muted-foreground hover:text-primary transition-colors mb-8"
+            className="inline-flex items-center space-x-2 text-lg font-bold text-primary hover:underline mb-8"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
             <span>{currentTexts.backToHome}</span>
           </button>
 
           <div className="mb-8">
-            <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-4">
+            <div className="flex items-center text-sm text-muted-foreground mb-4">
               <div className="flex items-center space-x-1">
                 <User className="w-4 h-4" />
                 <span>{currentPost.author ?? ''}</span>
               </div>
-              <span>5 {currentTexts.readingTime}</span>
             </div>
 
             <h1 className="text-4xl font-bold text-foreground leading-tight mb-4">

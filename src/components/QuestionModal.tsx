@@ -151,7 +151,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="glass-strong rounded-3xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-strong">
+      <div className="glass-strong rounded-3xl p-8 w-full max-w-2xl shadow-strong">
         {!isSubmitted ? (
           <>
             {/* Header */}
@@ -172,11 +172,11 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-base font-bold text-foreground mb-2">
                     {currentTexts.firstName} *
                   </label>
                   <input
@@ -188,7 +188,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-base font-bold text-foreground mb-2">
                     {currentTexts.lastName} *
                   </label>
                   <input
@@ -203,7 +203,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-base font-bold text-foreground mb-2">
                   {currentTexts.email} *
                 </label>
                 <input
@@ -217,7 +217,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
 
               {/* Company */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-base font-bold text-foreground mb-2">
                   {currentTexts.company}
                 </label>
                 <input
@@ -231,7 +231,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
               {/* Industry and Team Size */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-base font-bold text-foreground mb-2">
                     {currentTexts.industry}
                   </label>
                   <select
@@ -247,7 +247,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-base font-bold text-foreground mb-2">
                     {currentTexts.teamSize}
                   </label>
                   <select
@@ -266,7 +266,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
 
               {/* Repetitive Task */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-base font-bold text-foreground mb-2">
                   {currentTexts.repetitiveTask}
                 </label>
                 <input
@@ -280,7 +280,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
 
               {/* AI Usage */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-base font-bold text-foreground mb-2">
                   {currentTexts.aiUsage}
                 </label>
                 <div className="space-y-2">
@@ -294,20 +294,20 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
                         onChange={(e) => handleInputChange('aiUsage', e.target.value)}
                         className="w-4 h-4 text-primary focus:ring-2 focus:ring-primary"
                       />
-                      <span className="text-sm text-foreground">{level}</span>
-                    </label>
+                      <span className="text-base font-bold text-foreground">{level}</span>
+                      </label>
                   ))}
                 </div>
               </div>
 
               {/* Question */}
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-base font-bold text-foreground mb-2">
                   {currentTexts.question} *
                 </label>
                 <textarea
                   required
-                  rows={4}
+                  rows={3}
                   value={formData.question}
                   onChange={(e) => handleInputChange('question', e.target.value)}
                   className="w-full px-4 py-3 bg-white/50 border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-smooth resize-none"
@@ -324,7 +324,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
                     onChange={(e) => handleInputChange('wantResponse', e.target.checked)}
                     className="w-4 h-4 text-primary focus:ring-2 focus:ring-primary rounded"
                   />
-                  <span className="text-sm text-foreground">{currentTexts.wantResponse}</span>
+                  <span className="text-base font-bold text-foreground">{currentTexts.wantResponse}</span>
                 </label>
                 <label className="flex items-center space-x-3 cursor-pointer">
                   <input
@@ -333,7 +333,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
                     onChange={(e) => handleInputChange('newsletter', e.target.checked)}
                     className="w-4 h-4 text-primary focus:ring-2 focus:ring-primary rounded"
                   />
-                  <span className="text-sm text-foreground">{currentTexts.newsletter}</span>
+                  <span className="text-base font-bold text-foreground">{currentTexts.newsletter}</span>
                 </label>
               </div>
 
