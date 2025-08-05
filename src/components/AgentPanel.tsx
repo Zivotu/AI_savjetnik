@@ -335,7 +335,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           Razgovor se snima i transkribira radi poboljšanja usluge; podaci se
           čuvaju šifrirano i usklađeni su s GDPR-om.{' '}
           <a
-            className="underline text-white cursor-pointer"
+            className="relative z-20 underline text-white cursor-pointer"
             href="/privacy"
             target="_blank"
             rel="noopener noreferrer"
@@ -359,7 +359,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           Conversation is recorded and transcribed to improve the service; data
           is stored encrypted and compliant with GDPR.{' '}
           <a
-            className="underline text-white cursor-pointer"
+            className="relative z-20 underline text-white cursor-pointer"
             href="/privacy"
             target="_blank"
             rel="noopener noreferrer"
@@ -716,7 +716,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           </div>
         </div>
       </div>
-      <div className="text-xs text-slate-300 mt-6 text-center">
+      <div className="relative z-10 text-xs text-slate-300 mt-6 text-center">
         <p className="mb-1">{currentTexts.privacy}</p>
       </div>
       <GdprModal
@@ -742,12 +742,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         language={language}
         onClose={() => setSolutionOpen(false)}
       />
-      {DEBUG && (
-        <details className="mt-4 text-xs max-h-56 overflow-auto bg-neutral-900 text-white rounded p-2">
-          <summary>Debug transkript</summary>
-          <pre>{messages.map((m) => `${m.role}: ${m.text}`).join("\n")}</pre>
-        </details>
-      )}
     </div>
   );
 };
