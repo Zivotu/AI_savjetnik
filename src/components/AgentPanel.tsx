@@ -613,9 +613,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           onEndChat={handleEndChat}
         />
         <div className="flex flex-col h-full">
-          {phase === "collect" && messages.length === 0 && (
-            <p className="text-xs text-slate-300">🎙️ Snimamo…</p>
-          )}
           <div className="relative h-80 lg:h-96">
             <AnimatePresence mode="wait">
               {phase === "idle" ? (

@@ -90,9 +90,6 @@ export default function VoiceAgentDisplay({
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="absolute -top-4 left-0 text-2xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Bubi
-            </span>
             <div className="relative mb-8">
               <motion.div
                 className="relative w-48 h-48 rounded-full bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-lg border border-white/20 shadow-2xl flex items-center justify-center"
@@ -211,6 +208,9 @@ export default function VoiceAgentDisplay({
             >
               {statusText}
             </motion.p>
+            <span className="mt-2 text-2xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Bubi
+            </span>
           </motion.div>
         )}
       </AnimatePresence>

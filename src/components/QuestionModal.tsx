@@ -118,26 +118,29 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
 
   const currentTexts = texts[language];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.question) {
       return;
     }
 
-    // Simulate form submission
-    setTimeout(() => {
-      setIsSubmitted(true);
-      // Store in localStorage for demo
-      const submissions = JSON.parse(localStorage.getItem('questionSubmissions') || '[]');
-      submissions.push({
-        ...formData,
-        timestamp: new Date().toISOString(),
-        language
+    try {
+      const res = await fetch('/api/question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, language })
       });
-      localStorage.setItem('questionSubmissions', JSON.stringify(submissions));
-    }, 1000);
+
+      if (res.ok) {
+        setIsSubmitted(true);
+      } else {
+        console.error('Question submission failed');
+      }
+    } catch (err) {
+      console.error('Question submission error:', err);
+    }
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -354,7 +357,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
             <h3 className="text-2xl font-bold text-foreground mb-4">
               {currentTexts.successTitle}
             </h3>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+            <p className="text-white mb-8 max-w-md mx-auto">
               {currentTexts.successMessage}
             </p>
             <button

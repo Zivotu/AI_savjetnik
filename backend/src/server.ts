@@ -10,6 +10,7 @@ import transcriptsRouter from "./routes/transcripts";
 import solutionRouter from "./routes/solution";
 import summaryRouter from "./routes/summary";
 import articlesRouter from "./routes/articles";
+import questionRouter from "./routes/question";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/solution", solutionRouter);
 app.use("/api/summary", summaryRouter);
 app.use("/api/sendEmail", sendEmailRouter);
 app.use("/api/articles", articlesRouter);
+app.use("/api/question", questionRouter);
 
 /* 404 + error */
 app.use((_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));
