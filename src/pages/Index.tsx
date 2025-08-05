@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { X, Headphones } from 'lucide-react';
 import Header from '@/components/Header';
 import AgentPanel from '@/components/AgentPanel';
 import QuestionModal from '@/components/QuestionModal';
@@ -16,9 +17,198 @@ interface Article {
   createdAt: string;
 }
 
+// TypeWriter komponenta s bržim efektom
+function TypeWriter({ text }: { text: string }) {
+  const [shown, setShown] = useState("");
+  
+  useEffect(() => {
+    let i = 0;
+    const id = setInterval(() => {
+      setShown(text.slice(0, ++i));
+      if (i >= text.length) clearInterval(id);
+    }, 15); // Brži od originalnih 20ms
+    return () => clearInterval(id);
+  }, [text]);
+  
+  return <span>{shown}</span>;
+}
+
+// Headphones Notification Modal komponenta
+const HeadphonesNotification = ({ language, isVisible, onClose }: { 
+  language: 'hr' | 'en'; 
+  isVisible: boolean; 
+  onClose: () => void; 
+}) => {
+  const [showTypewriter, setShowTypewriter] = useState(false);
+
+  const texts = {
+    hr: {
+      mainText: "Za najbolje korisničko iskustvo predlažemo Vam da spojite slušalice",
+      subText: "Na taj način ćemo biti sigurni da kad započnemo razgovor ja neću imati problema s prepoznavanjem onoga što ste rekli i onoga što čujem sam sebe preko vaših zvučnika.",
+      closeButton: "ZATVORI"
+    },
+    en: {
+      mainText: "For the best user experience, we recommend connecting headphones",
+      subText: "This way we can be sure that when we start the conversation, I won't have problems recognizing what you said and what I hear myself through your speakers.",
+      closeButton: "CLOSE"
+    }
+  };
+
+  const currentTexts = texts[language];
+
+  useEffect(() => {
+    if (isVisible) {
+      // Pokretanje zvuka Intro.mp3
+      const audio = new Audio('/assets/Intro.mp3');
+      audio.play().catch(err => {
+        console.log('Audio autoplay blocked:', err);
+      });
+
+      // Delay za typewriter efekt
+      const timer = setTimeout(() => {
+        setShowTypewriter(true);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4" 
+      style={{
+        background: 'linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%)',
+        backdropFilter: 'blur(8px)'
+      }}
+    >
+      <div 
+        className="w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.1) inset',
+          animation: 'fadeInScale 0.5s ease-out'
+        }}
+      >
+        <div className="p-8 text-center">
+          {/* Close Button */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full transition-all duration-300 hover:scale-110"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#ffffff'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+              }}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Main Text with TypeWriter */}
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 leading-tight min-h-[120px]" style={{ color: '#ffffff' }}>
+              {showTypewriter && <TypeWriter text={currentTexts.mainText} />}
+            </h2>
+            <p className="text-lg mb-8 leading-relaxed max-w-md mx-auto min-h-[96px]" style={{ color: 'rgba(255,255,255,0.8)' }}>
+              {showTypewriter && <TypeWriter text={currentTexts.subText} />}
+            </p>
+          </div>
+
+          {/* Animated Headphones Icon */}
+          <div className="mb-8">
+            <div 
+              className="w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-4"
+              style={{
+                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                boxShadow: '0 10px 30px rgba(59,130,246,0.3)',
+                animation: 'bounce 2s infinite'
+              }}
+            >
+              <Headphones className="w-12 h-12 text-white" />
+            </div>
+            <div className="flex justify-center space-x-2">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 rounded-full"
+                  style={{
+                    background: 'rgba(255,255,255,0.6)',
+                    animation: `pulse 1.5s infinite ${i * 0.2}s`
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl text-lg"
+            style={{
+              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+              boxShadow: '0 10px 30px rgba(59,130,246,0.3)'
+            }}
+          >
+            {currentTexts.closeButton}
+          </button>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        @keyframes bounce {
+          0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+          }
+          40% {
+            transform: translateY(-10px);
+          }
+          60% {
+            transform: translateY(-5px);
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.6;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.2);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const Index = () => {
   const [language, setLanguage] = useState<'hr' | 'en'>('hr');
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+  const [isHeadphonesModalOpen, setIsHeadphonesModalOpen] = useState(true); // Prikazuje se na početku
+  const [selectedCategory, setSelectedCategory] = useState(0);
 
   // Listen for header question button click
   useEffect(() => {
@@ -26,7 +216,6 @@ const Index = () => {
     window.addEventListener('openQuestionModal', handleOpenModal);
     return () => window.removeEventListener('openQuestionModal', handleOpenModal);
   }, []);
-  const [selectedCategory, setSelectedCategory] = useState(0);
 
   const texts = {
     hr: {
@@ -63,6 +252,10 @@ const Index = () => {
     ? regularPosts 
     : regularPosts.filter(post => post.category[language] === currentCategories[selectedCategory]);
 
+  const handleCloseHeadphonesModal = () => {
+    setIsHeadphonesModalOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <Header language={language} onLanguageChange={setLanguage} />
@@ -91,7 +284,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
 
       {/* Footer */}
       <footer className="bg-white/20 border-t border-white/20 py-8">
@@ -132,6 +324,13 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      {/* Headphones Notification Modal - Prikazuje se prvo */}
+      <HeadphonesNotification
+        language={language}
+        isVisible={isHeadphonesModalOpen}
+        onClose={handleCloseHeadphonesModal}
+      />
 
       {/* Question Modal */}
       <QuestionModal
