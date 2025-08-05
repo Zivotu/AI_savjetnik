@@ -1,397 +1,90 @@
 {
   "id": "32b5ad36-9a83-408a-90e2-9f85a14ad2fe",
-  "created": "2025-07-31T00:16:01.713Z",
+  "created": "2025-08-05T18:33:01.934Z",
   "turns": [
     {
       "role": "user",
-      "text": "bok",
-      "mode": "chat",
-      "t": 1753920961714
-    },
-    {
-      "role": "user",
-      "text": "bok",
-      "mode": "chat",
-      "t": 1753921374809
-    },
-    {
-      "role": "user",
-      "text": "bok22",
-      "mode": "chat",
-      "t": 1753921452521
-    },
-    {
-      "role": "user",
-      "text": "bok",
-      "mode": "chat",
-      "t": 1753960529541
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "t": 1753963873800
-    },
-    {
-      "role": "user",
-      "text": "hello",
-      "mode": "chat",
-      "t": 1753963937554
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "t": 1753965701594
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "t": 1753967426925
-    },
-    {
-      "role": "assistant",
-      "text": "Koji vam je najdosadniji repetitivan zadatak?",
-      "phase": "collect",
-      "mode": "voice",
-      "t": 1753972645133
-    },
-    {
-      "role": "assistant",
-      "text": "undefined\nundefined",
-      "phase": "closing",
-      "mode": "voice",
-      "t": 1753972766362
-    },
-    {
-      "role": "system",
-      "text": "CONVO_END",
-      "phase": "ended",
-      "t": 1753972766690
-    },
-    {
-      "role": "assistant",
-      "text": "Koji vam je najdosadniji repetitivan zadatak?",
-      "phase": "collect",
-      "mode": "voice",
-      "t": 1754046886789
-    },
-    {
-      "role": "assistant",
-      "text": "undefined\nundefined",
-      "phase": "closing",
-      "mode": "voice",
-      "t": 1754047007746
-    },
-    {
-      "role": "system",
-      "text": "CONVO_END",
-      "phase": "ended",
-      "t": 1754047008073
-    },
-    {
-      "role": "user",
-      "text": "CONTACT::amir.serbic@yahoo.com|0913066505",
-      "t": 1754047063961
-    },
-    {
-      "role": "user",
-      "text": "bok",
-      "mode": "chat",
-      "t": 1754047086213
-    },
-    {
-      "role": "user",
-      "text": "pozdrav",
-      "mode": "chat",
-      "t": 1754050154672
-    },
-    {
-      "role": "user",
-      "text": "bok",
-      "mode": "chat",
-      "t": 1754050223077
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "t": 1754051758024
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "t": 1754052897952
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "t": 1754053368070
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "ts": "2025-08-01T13:42:22.181Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T14:08:47.176Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T14:10:11.352Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T14:13:21.895Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T14:17:19.695Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T14:26:10.661Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T14:27:02.226Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T14:29:40.258Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T16:22:59.253Z"
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "ts": "2025-08-01T16:23:25.091Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T16:54:47.773Z"
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "ts": "2025-08-01T16:55:04.795Z"
-    },
-    {
-      "role": "user",
-      "text": "can you hear me?",
-      "mode": "chat",
-      "ts": "2025-08-01T16:55:31.751Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T17:27:43.656Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T17:32:00.293Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T18:17:30.859Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T18:18:20.281Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T18:25:11.217Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T18:38:13.063Z"
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "ts": "2025-08-01T18:38:25.168Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T18:50:11.261Z"
-    },
-    {
-      "role": "user",
-      "text": "hey",
-      "mode": "chat",
-      "ts": "2025-08-01T18:50:35.702Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T18:54:55.874Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T18:59:22.974Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T19:19:35.910Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T21:18:33.573Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T22:14:46.630Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T22:53:53.860Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T22:57:09.887Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T23:00:27.416Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T23:16:36.322Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T23:20:23.189Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-01T23:25:28.742Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-02T00:12:59.373Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-02T00:32:06.706Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-02T00:56:14.404Z"
-    },
-    {
-      "role": "user",
-      "text": "[CALL_STARTED]",
-      "phase": "intro",
-      "mode": "voice",
-      "ts": "2025-08-03T23:46:23.894Z"
-    },
-    {
-      "role": "assistant",
-      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "text": "Možemo možda porazgovarati o tome što inače radiš u životu?",
       "phase": "idle",
       "mode": "voice",
-      "ts": "2025-08-03T23:46:25.877Z"
+      "ts": "2025-08-05T18:33:01.934Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Žao mi je, ali ne mogu voditi takav razgovor. Ja sam tu da ti pomognem s automatizacijom poslovanja.",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:33:02.210Z"
+    },
+    {
+      "role": "user",
+      "text": "A kako si, jesi ti možda automatizirao neko svoje poslovanje?",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:33:17.445Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Ja sam virtualni asistent, pa nemam svoje poslovanje. Ali, moji tvorci su koristili automatizaciju za razne stvari — od slanja e-mailova do analize podataka. To im je uštedjelo puno vremena!",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:33:17.987Z"
+    },
+    {
+      "role": "user",
+      "text": "Imaš koji primjer da mi kažeš?",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:33:33.287Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Pa, primjerice, za slanje izvještaja o korištenju alata, umjesto da ručno provjeravaju i šalju mailove, postavili su automatizaciju. Sustav sam generira izvještaj i šalje ga u točno određeno vrijeme.\n\nTako su uštedjeli dosta vremena i osigurali da informacije uvijek dođu na vrijeme.\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:33:33.876Z"
+    },
+    {
+      "role": "user",
+      "text": "Super, a koliko to njih košta mjesečno?",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:33:53.732Z"
+    },
+    {
+      "role": "assistant",
+      "text": "To ovisi o alatu koji koriste i opsegu posla. Neki alati imaju besplatne verzije za osnovne stvari, dok se za naprednije opcije plaća. Ali, generalno, može biti vrlo isplativo jer štedi vrijeme i smanjuje troškove.\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:33:54.581Z"
+    },
+    {
+      "role": "user",
+      "text": "Da bih reći, a možete vi ovoga ili vaš tim možda doći educirati moje ljude, napraviti neku edukaciju u umjetnoj inteligenciji ili nešto u tom stilu?",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:34:19.888Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Da, definitivno. Imamo i opciju edukacije tvojih ljudi, kao i implementacije naprednijih rješenja.\n\nAko te to zanima, možemo ti poslati detaljniju ponudu.",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:34:20.445Z"
+    },
+    {
+      "role": "user",
+      "text": "Dobro, pa mislim, može. Ok, hvala ti za sada. Eto, hvala ti.",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:34:39.566Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Nema na čemu! Drago mi je da sam pomogao.\n\nSada ću ti poslati ponudu, a dobit ćeš i PDF s uputama.\n\nŽeliš li da ti pošaljem još nešto ili je to sve za danas?\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:34:40.650Z"
     }
-  ],
-  "finished": true,
-  "finishedAt": "2025-08-01T11:16:48.074Z"
+  ]
 }

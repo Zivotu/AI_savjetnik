@@ -1,5 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Mic, MicOff, Volume2, VolumeX, X } from "lucide-react";
+import agentImg from "../../assets/Bubi_2.png";
+
 
 interface VoiceAgentDisplayProps {
   title: string;
@@ -133,14 +135,15 @@ export default function VoiceAgentDisplay({
                 </AnimatePresence>
 
                 <motion.div
-                  className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-6xl shadow-xl"
-                  animate={{
-                    scale: isSpeaking ? [1, 1.05, 1] : 1,
-                  }}
-                  transition={{ duration: 0.6, repeat: isSpeaking ? Infinity : 0 }}
-                >
-                  🤖
-                </motion.div>
+  className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-xl"
+  animate={{
+    scale: isSpeaking ? [1, 1.05, 1] : 1,
+  }}
+  transition={{ duration: 0.6, repeat: isSpeaking ? Infinity : 0 }}
+>
+  <img src={agentImg} alt="Bubi" className="w-full h-full object-cover" />
+</motion.div>
+
 
                 <motion.div
                   className="absolute top-4 right-4 w-6 h-6 bg-green-500 rounded-full border-3 border-white shadow-lg"

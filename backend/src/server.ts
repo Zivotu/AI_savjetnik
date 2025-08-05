@@ -35,8 +35,8 @@ app.use("/api/agent", agentRouter);
 app.use("/api/tts", ttsRouter);
 app.use("/api/transcripts", transcriptsRouter);
 app.use("/api/solution", solutionRouter);
-app.use("/api/summary", summaryRouter);
-app.use("/api/sendEmail", sendEmailRouter);
+app.use("/api/elevenlabs/summary", summaryRouter);
+app.use("/api/elevenlabs/sendEmail", sendEmailRouter);
 app.use("/api/articles", articlesRouter);
 app.use("/api/question", questionRouter);
 
