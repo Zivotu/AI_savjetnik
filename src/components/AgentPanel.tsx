@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
 import SolutionModal from "./SolutionModal";
@@ -9,7 +9,6 @@ import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
 
 type Turn = { role: "user" | "assistant"; text: string; time: string };
-
 interface ContactInfo {
   email: string;
   phone: string;
@@ -30,7 +29,6 @@ function TypeWriter({ text }: { text: string }) {
 
 const COLLECT_TIMEOUT_MS =
   Number(import.meta.env.VITE_COLLECT_TIMEOUT_MS ?? "120000") || 120000;
-
 const DEBUG = import.meta.env.DEV;
 
 function addDevLog(tag: string, data: unknown) {
@@ -69,10 +67,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const [contactSubmitted, setContactSubmitted] = useState(
     () => localStorage.getItem("contactDone") === "yes",
   );
-
   const [solutionOpen, setSolutionOpen] = useState(false);
   const [solutionTextState, setSolutionTextState] = useState("");
-
   const [phase, setPhase] = useState<
     "idle" | "intro" | "collect" | "closing" | "ended"
   >("idle");
@@ -84,19 +80,17 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const mutedRef = useRef(false);
   const timer = useRef<NodeJS.Timeout>();
   const startAt = useRef(0);
-
   const transcriptRef = useRef<HTMLDivElement>(null);
   const eviSocketRef = useRef<WebSocket | null>(null);
   const eviPlayerRef = useRef<EviWebAudioPlayer | null>(null);
   const closingHandled = useRef(false);
-  // Web-Audio za ElevenLabs TTS
   const audioCtxRef = useRef<AudioContext | null>(null);
   const contactRef = useRef<ContactInfo | null>(null);
   const openContactResolver = useRef<
     ((data?: ContactInfo) => void) | null
   >(null);
-
   const messagesRef = useRef<Turn[]>([]);
+
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -114,24 +108,20 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   function playAudio(data: ArrayBuffer) {
     if (mutedRef.current) return;
     try {
-      // init ili uzmi postojeći kontekst
       const ctx =
         audioCtxRef.current ??
         new (
           window.AudioContext ||
-            (
-              window as unknown as {
-                webkitAudioContext: typeof AudioContext;
-              }
-            ).webkitAudioContext
+          (
+            window as unknown as {
+              webkitAudioContext: typeof AudioContext;
+            }
+          ).webkitAudioContext
         )({
           sampleRate: 48_000,
         });
       audioCtxRef.current = ctx;
-
-      if (!(data instanceof ArrayBuffer)) return; // safety-guard
-
-      // pokušaj dekodirati, fallback ako ne uspije
+      if (!(data instanceof ArrayBuffer)) return;
       ctx
         .decodeAudioData(data.slice(0))
         .then((buf) => {
@@ -150,30 +140,24 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   const onAudio = (packet: unknown) => {
     if (mode === "chat") return;
-    // ⚠️ ElevenLabs preko WebSocketa katkad šalje “ping” frame ili JSON –
-    //    provjeri i pretvori u ArrayBuffer samo ako ima audio.
     let buf: ArrayBuffer | null = null;
-
     if (packet instanceof ArrayBuffer) {
-      buf = packet; // WebRTC varianta – sirovi PCM/Opus
+      buf = packet;
     } else if (
       typeof packet === "object" &&
       packet !== null &&
       "audio" in packet &&
       typeof (packet as { audio: unknown }).audio === "string"
     ) {
-      // { audio: "base64..." }  – WS varianta
       const str = atob((packet as { audio: string }).audio);
       const arr = new Uint8Array(str.length);
       for (let i = 0; i < str.length; i++) arr[i] = str.charCodeAt(i);
       buf = arr.buffer;
     }
-
     if (buf) {
       addDevLog("onAudio", `${buf.byteLength}B`);
       playAudio(buf);
     } else {
-      // tih paket ignoriramo da ne rušimo UI
       addDevLog("onAudio", "⏭️ prazan paket");
     }
   };
@@ -183,7 +167,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setInterim(null);
       setPhase((p) => (p === "intro" && m.source === "user" ? "collect" : p));
       setActiveSpeaker(m.source === "user" ? "user" : "agent");
-
       const msg: Turn = {
         role: m.source === "user" ? "user" : "assistant",
         text: m.message,
@@ -191,7 +174,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       };
       setMessages((prev) => [...prev, msg]);
       addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
-
       fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -232,9 +214,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     clientTools: {
       openContactConfirm: () => {
         return new Promise<ContactInfo | undefined>((resolve) => {
-          openContactResolver.current = resolve; // will receive {email,phone}
+          openContactResolver.current = resolve;
           setContactOpen(true);
-        }) as unknown as Promise<string | number | void>; // cast to satisfy sdk typing
+        }) as unknown as Promise<string | number | void>;
       },
     },
   });
@@ -242,11 +224,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   async function finalize() {
     if (closingHandled.current) return;
     closingHandled.current = true;
-
     const transcript = messagesRef.current
       .map((m) => `${m.role === "user" ? "User" : "Agent"}: ${m.text}`)
       .join("\n");
-
     try {
       const sumRes = await fetch("/api/summary", {
         method: "POST",
@@ -262,7 +242,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         return;
       }
       const { summary } = await sumRes.json();
-
       const solRes = await fetch("/api/solution", {
         method: "POST",
         headers: {
@@ -283,7 +262,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         return;
       }
       const solutionText = `${sol.solutionText}\n${sol.cta}`;
-
       if (contactRef.current) {
         await fetch("/api/sendEmail", {
           method: "POST",
@@ -291,15 +269,13 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           body: JSON.stringify({
             email: contactRef.current.email,
             phone: contactRef.current.phone,
-            painPoints: [],          // fill later if needed
-            proposal: solutionText,  // include agent proposal
+            painPoints: [],
+            proposal: solutionText,
           }),
         });
       }
-
       setSolutionTextState(solutionText);
       setSolutionOpen(true);
-
       await fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -311,7 +287,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           mode: "voice",
         }),
       });
-
       setMessages((prev) => [
         ...prev,
         {
@@ -321,7 +296,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         },
       ]);
       addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
-
       const ttsRes = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -330,7 +304,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       const blob = await ttsRes.blob();
       const url = URL.createObjectURL(blob);
       new Audio(url).play();
-
       await fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -392,7 +365,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   const currentTexts = texts[language];
 
-  // Track progress based on the conversation phase
   useEffect(() => {
     switch (phase) {
       case "intro":
@@ -435,17 +407,14 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   useEffect(() => {
     if (phase !== "collect") return;
-
     const player = new EviWebAudioPlayer();
     eviPlayerRef.current = player;
-
     const wsUrl =
       (window.location.protocol === "https:" ? "wss://" : "ws://") +
       window.location.host +
       "/api/evi";
     const ws = new WebSocket(wsUrl);
     eviSocketRef.current = ws;
-
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data as string);
@@ -460,11 +429,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         console.error("Failed to parse EVI message", err);
       }
     };
-
     ws.onclose = () => {
       player.stop();
     };
-
     return () => {
       ws.close();
       player.stop();
@@ -476,8 +443,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setGdprOpen(true);
       return;
     }
-
-    // 1️⃣ pošalji intro-turn backendu
     await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -489,22 +454,16 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         mode: "voice",
       }),
     });
-
     setActiveSpeaker("user");
-
     setPhase("intro");
     startAt.current = Date.now();
-
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
-
       await startSession({
         agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
         connectionType: "websocket",
       });
       setSessionActive(true);
-
-      // 4️⃣ nakon timeouta finaliziraj
       timer.current = setTimeout(() => {
         setPhase("closing");
         finalize();
@@ -528,8 +487,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     setConsentGiven(true);
     localStorage.setItem("consent", "yes");
     setGdprOpen(false);
-
-    // logiraj backend
     await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -539,19 +496,13 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         text: "CONSENT_GIVEN",
       }),
     });
-
-    // sada pokreni voice
     startVoice();
   }
 
   async function handleSaveContact(email: string, phone: string) {
-    // hand back to ElevenLabs
     openContactResolver.current?.({ email, phone });
     openContactResolver.current = null;
-
-    // keep copy for finalize()
     contactRef.current = { email, phone };
-
     await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -571,7 +522,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     setSending(true);
     const ts = new Date().toLocaleTimeString();
     setMessages((prev) => [...prev, { role: "user", text: value, time: ts }]);
-
     if (mode === "voice") {
       await ensureSession();
       sendUserMessage(value);
@@ -606,7 +556,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const isChatActive = phase !== "idle";
   const isSpeaking = activeSpeaker === "agent";
   const isListening = activeSpeaker === "user" || micEnabled;
-
   const handleStartChat = () => (consentGiven ? startVoice() : setGdprOpen(true));
   const handleMicToggle = () =>
     setMicEnabled((p) => {
@@ -653,31 +602,53 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           onMuteToggle={handleMuteToggle}
           onEndChat={handleEndChat}
         />
-
         <div className="flex flex-col h-full">
           {phase === "collect" && messages.length === 0 && (
             <p className="text-xs text-slate-300">🎙️ Snimamo…</p>
           )}
-
-          <div
-            className="h-80 lg:h-96 overflow-y-auto rounded-2xl bg-white/10 backdrop-blur-lg p-4 border border-white/20"
-            ref={transcriptRef}
-          >
-            {messages.map((m, i) => (
-              <p
-                key={i}
-                className={`text-sm mb-1 ${
-                  m.role === "user" ? "text-blue-300" : "text-white"
-                }`}
-              >
-                <TypeWriter text={m.text} />
-              </p>
-            ))}
-            {interim && (
-              <p className="text-xs italic text-slate-300">{interim.text}</p>
-            )}
+          <div className="relative h-80 lg:h-96">
+            <AnimatePresence mode="wait">
+              {phase === "idle" ? (
+                <motion.div
+                  key="placeholder-image"
+                  initial={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  className="absolute inset-0 rounded-2xl overflow-hidden"
+                >
+                  <img
+                    src="/path/to/placeholder-image.jpg" // Zamijenite s pravim putem do slike
+                    alt="Placeholder"
+                    className="w-full h-full object-cover"
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="transcript"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  className="absolute inset-0 overflow-y-auto rounded-2xl bg-white/10 backdrop-blur-lg p-4 border border-white/20"
+                  ref={transcriptRef}
+                >
+                  {messages.map((m, i) => (
+                    <p
+                      key={i}
+                      className={`text-sm mb-1 ${
+                        m.role === "user" ? "text-blue-300" : "text-white"
+                      }`}
+                    >
+                      <TypeWriter text={m.text} />
+                    </p>
+                  ))}
+                  {interim && (
+                    <p className="text-xs italic text-slate-300">{interim.text}</p>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-
           {mode === "chat" && (
             <form
               onSubmit={(e) => {
@@ -709,7 +680,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
               </button>
             </form>
           )}
-
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
               {currentTexts.steps.map((step, index) => (
@@ -719,8 +689,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                     index === currentStep
                       ? "bg-blue-600 text-white"
                       : index < currentStep
-                        ? "bg-purple-600 text-white"
-                        : "bg-white/30 text-slate-300"
+                      ? "bg-purple-600 text-white"
+                      : "bg-white/30 text-slate-300"
                   }`}
                 >
                   {step}
@@ -736,11 +706,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
           </div>
         </div>
       </div>
-
       <div className="text-xs text-slate-300 mt-6 text-center">
         <p className="mb-1">{currentTexts.privacy}</p>
       </div>
-
       <GdprModal
         open={gdprOpen}
         onAccept={handleConsent}
