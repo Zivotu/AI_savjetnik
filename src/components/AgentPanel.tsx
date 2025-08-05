@@ -45,7 +45,7 @@ interface AgentPanelProps {
 }
 
 const AgentPanel = ({ language }: AgentPanelProps) => {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(-1);
   const [messages, setMessages] = useState<Turn[]>([]);
   const [interim, setInterim] = useState<Turn | null>(null);
   const [mode, setMode] = useState<"voice" | "chat">("voice");
