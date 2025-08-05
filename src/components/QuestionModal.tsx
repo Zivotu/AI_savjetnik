@@ -157,7 +157,7 @@ const QuestionModal = ({ isOpen, onClose, language }: QuestionModalProps) => {
                 <h2 className="text-2xl font-bold text-foreground mb-1">
                   {currentTexts.title}
                 </h2>
-                <p className="text-muted-foreground">{currentTexts.subtitle}</p>
+                <p className="text-white">{currentTexts.subtitle}</p>
               </div>
               <button
                 onClick={onClose}

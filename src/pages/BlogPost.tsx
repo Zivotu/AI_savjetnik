@@ -50,7 +50,7 @@ const BlogPost = () => {
         el.replaceWith(span);
       });
 
-    const html = doc.body.innerHTML;
+    const html = doc.body.innerHTML.replace(/&nbsp;|&amp;nbsp;/g, ' ');
 
     return DOMPurify.sanitize(html, {
       ADD_TAGS: ['iframe', 'div', 'span'],
