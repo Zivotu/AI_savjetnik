@@ -334,7 +334,12 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         <>
           Razgovor se snima i transkribira radi poboljšanja usluge; podaci se
           čuvaju šifrirano i usklađeni su s GDPR-om.{' '}
-          <a className="underline" href="/privacy">
+          <a
+            className="underline text-white cursor-pointer"
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Detalji o obradi podataka
           </a>
           .
@@ -353,7 +358,12 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         <>
           Conversation is recorded and transcribed to improve the service; data
           is stored encrypted and compliant with GDPR.{' '}
-          <a className="underline" href="/privacy">
+          <a
+            className="underline text-white cursor-pointer"
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Details about data processing
           </a>
           .
@@ -617,9 +627,9 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                   className="absolute inset-0 rounded-2xl overflow-hidden"
                 >
                   <img
-                    src="/path/to/placeholder-image.jpg" // Zamijenite s pravim putem do slike
-                    alt="Placeholder"
-                    className="w-full h-full object-cover"
+                    src="/assets/BrainAI.png"
+                    alt="BrainAI"
+                    className="w-full h-full object-contain"
                   />
                 </motion.div>
               ) : (
