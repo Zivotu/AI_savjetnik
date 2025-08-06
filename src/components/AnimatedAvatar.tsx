@@ -1,3 +1,5 @@
+import agentImage from '@/assets/agent_1.png';
+
 interface Props {
   isListening: boolean;
   isSpeaking: boolean;
@@ -21,7 +23,7 @@ const AnimatedAvatar: React.FC<Props> = ({ isListening, isSpeaking, isThinking }
             ))}
           </div>
         ) : (
-          <img src="/assets/agent_1.png" alt="AI" className="w-20 h-20 rounded-full" />
+          <img src={agentImage} alt="AI" className="w-20 h-20 rounded-full" />
         )}
       </div>
     </div>

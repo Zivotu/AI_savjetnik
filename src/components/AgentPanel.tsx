@@ -7,6 +7,7 @@ import VoiceAgentDisplay from "./VoiceAgentDisplay";
 import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
+import brainAI from '@/assets/BrainAI.png';
 
 type Turn = { role: "user" | "assistant"; text: string; time: string };
 interface ContactInfo {
@@ -624,7 +625,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
                   className="absolute inset-0 rounded-2xl overflow-hidden"
                 >
                   <img
-                    src="/assets/BrainAI.png"
+                    src={brainAI}
                     alt="BrainAI"
                     className="w-full h-full object-contain"
                   />

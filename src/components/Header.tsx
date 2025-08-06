@@ -1,4 +1,5 @@
 import { Mail } from 'lucide-react';
+import logo from '@/assets/neurobiz_logo.png';
 
 interface HeaderProps {
   language: 'hr' | 'en';
@@ -25,7 +26,7 @@ const Header = ({ language, onLanguageChange }: HeaderProps) => {
         {/* Logo */}
         <a href="/" className="flex items-center group">
           <img
-            src="/assets/NeuroBiz_Logo_1%20copy.png"
+            src={logo}
             alt="Neurobiz logo"
             className="h-10 w-auto transition-transform group-hover:scale-105"
           />
