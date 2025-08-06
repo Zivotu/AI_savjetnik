@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel-build": "cd backend && npm run build",
+    "vercel-build": "npm run build && cd backend && npm run build",
     "type-check": "tsc --noEmit",
     "dev:server": "cd backend && npm run dev"
   },
