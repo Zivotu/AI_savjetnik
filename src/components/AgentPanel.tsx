@@ -164,7 +164,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   };
 
   const { startSession, sendUserMessage, sendUserActivity } = useConversation({
-    onMessage: (m) => {
+    onMessage: async (m) => {
       setInterim(null);
       setPhase((p) => (p === "intro" && m.source === "user" ? "collect" : p));
       setActiveSpeaker(m.source === "user" ? "user" : "agent");
@@ -175,19 +175,26 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       };
       setMessages((prev) => [...prev, msg]);
       addDevLog("messages", `ukupno ${messagesRef.current.length + 1}`);
-      fetch("/api/agent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversationId,
-          role: m.source === "user" ? "user" : "assistant",
-          text: m.message,
-          phase,
-          mode,
-        }),
-      }).catch((err) => {
+      try {
+        const res = await fetch("/api/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversationId,
+            role: m.source === "user" ? "user" : "assistant",
+            text: m.message,
+            phase,
+            mode,
+          }),
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`API error ${res.status}: ${text}`);
+        }
+        const data = await res.json();
+      } catch (err) {
         console.error("Agent API request failed", err);
-      });
+      }
     },
     onDebug: (d) => {
       addDevLog("debug", d);
@@ -276,19 +283,26 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         });
       }
       setSolutionTextState(solutionText);
-      setSolutionOpen(true);
-      await fetch("/api/agent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversationId,
-          role: "assistant",
-          text: solutionText,
-          phase: "closing",
-          mode: "voice",
-        }),
-      });
-      setMessages((prev) => [
+        setSolutionOpen(true);
+        {
+          const res = await fetch("/api/agent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              conversationId,
+              role: "assistant",
+              text: solutionText,
+              phase: "closing",
+              mode: "voice",
+            }),
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`API error ${res.status}: ${text}`);
+          }
+          const data = await res.json();
+        }
+        setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
@@ -303,19 +317,26 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         body: JSON.stringify({ text: solutionText }),
       });
       const blob = await ttsRes.blob();
-      const url = URL.createObjectURL(blob);
-      new Audio(url).play();
-      await fetch("/api/agent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversationId,
-          role: "system",
-          text: "CONVO_END",
-          phase: "ended",
-        }),
-      });
-      localStorage.removeItem("convId");
+        const url = URL.createObjectURL(blob);
+        new Audio(url).play();
+        {
+          const res = await fetch("/api/agent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              conversationId,
+              role: "system",
+              text: "CONVO_END",
+              phase: "ended",
+            }),
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`API error ${res.status}: ${text}`);
+          }
+          const data = await res.json();
+        }
+        localStorage.removeItem("convId");
       setPhase("ended");
       setActiveSpeaker(null);
     } catch (err) {
@@ -454,7 +475,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       setGdprOpen(true);
       return;
     }
-    await fetch("/api/agent", {
+    const res = await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -465,6 +486,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         mode: "voice",
       }),
     });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`API error ${res.status}: ${text}`);
+    }
+    const data = await res.json();
     setActiveSpeaker("user");
     setPhase("intro");
     startAt.current = Date.now();
@@ -498,7 +524,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     setConsentGiven(true);
     localStorage.setItem("consent", "yes");
     setGdprOpen(false);
-    await fetch("/api/agent", {
+    const res = await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -507,6 +533,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         text: "CONSENT_GIVEN",
       }),
     });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`API error ${res.status}: ${text}`);
+    }
+    const data = await res.json();
     startVoice();
   }
 
@@ -514,7 +545,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     openContactResolver.current?.({ email, phone });
     openContactResolver.current = null;
     contactRef.current = { email, phone };
-    await fetch("/api/agent", {
+    const res = await fetch("/api/agent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -523,6 +554,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         text: `CONTACT::${email}|${phone}`,
       }),
     });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`API error ${res.status}: ${text}`);
+    }
+    const data = await res.json();
     localStorage.setItem("contactDone", "yes");
     setContactSubmitted(true);
     setContactOpen(false);
