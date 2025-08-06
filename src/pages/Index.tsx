@@ -224,24 +224,31 @@ const Index = () => {
       blogSectionSubtitle: 'Konkretni primjeri implementacije AI-ja u različitim industrijama',
       additionalArticles: 'Dodatni članci',
       filterBy: 'Filtriraj po kategoriji:',
-      allCategories: 'Sve kategorije'
+      allCategories: 'Sve kategorije',
+      loadError: 'Pogreška pri učitavanju članaka. Pokušajte ponovno kasnije.'
     },
     en: {
       blogSectionTitle: 'AI SOLUTIONS FOR YOUR INDUSTRY',
       blogSectionSubtitle: 'Concrete examples of AI implementation in different industries',
       additionalArticles: 'Additional Articles',
       filterBy: 'Filter by category:',
-      allCategories: 'All categories'
+      allCategories: 'All categories',
+      loadError: 'Failed to load articles. Please try again later.'
     }
   };
 
   const currentTexts = texts[language];
   const [posts, setPosts] = useState<Article[]>([]);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    fetch('/api/articles')
-      .then(r => r.json())
-      .then(setPosts);
+    fetch("/api/articles")
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(r.statusText)))
+      .then(setPosts)
+      .catch(err => {
+        console.error(err);
+        setLoadError(true);
+      });
   }, []);
 
   const featuredPosts = posts.filter(post => post.featured);
@@ -272,16 +279,22 @@ const Index = () => {
       <section className="container mx-auto px-4 pb-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {posts.map(post => (
-              <BlogCard
-                key={post.id}
-                title={post.title[language]}
-                excerpt={post.excerpt[language]}
-                slug={post.slug}
-                featured={post.featured}
-                thumbnail={post.thumbnail}
-              />
-            ))}
+            {loadError ? (
+              <p className="col-span-full text-center text-muted-foreground">
+                {currentTexts.loadError}
+              </p>
+            ) : (
+              posts.map(post => (
+                <BlogCard
+                  key={post.id}
+                  title={post.title[language]}
+                  excerpt={post.excerpt[language]}
+                  slug={post.slug}
+                  featured={post.featured}
+                  thumbnail={post.thumbnail}
+                />
+              ))
+            )}
           </div>
         </div>
       </section>
