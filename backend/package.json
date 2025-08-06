@@ -7,14 +7,9 @@
     "node": ">=16"
   },
   "scripts": {
-
     "build": "tsc --project tsconfig.json",
-
-
     "prestart": "node -e \"const fs=require('fs'), dir='transcripts'; if(!fs.existsSync(dir)) fs.mkdirSync(dir,{recursive:true}); try{fs.chmodSync(dir,0o775)}catch{}\"",
-
     "start": "node dist/index.js",
-
     "predev": "node -e \"const fs=require('fs'), dir='transcripts'; if(!fs.existsSync(dir)) fs.mkdirSync(dir,{recursive:true}); try{fs.chmodSync(dir,0o775)}catch{}\"",
     "dev": "ts-node-dev --respawn --prefer-ts-exts src/index.ts"
   },
@@ -26,6 +21,7 @@
     "hume": "^0.12.1",
     "nodemailer": "^7.0.5",
     "openai": "^5.11.0",
+    "vite_react_shadcn_ts": "file:..",
     "ws": "^8.17.0"
   },
   "devDependencies": {
