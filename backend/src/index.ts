@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import http from 'http';
 import app from './server';
 import { attachSttProxy } from './sttProxy';
