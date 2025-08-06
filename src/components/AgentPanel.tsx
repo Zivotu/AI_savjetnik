@@ -8,6 +8,18 @@ import { EviWebAudioPlayer } from "@/utils/eviPlayer";
 import { useConversation } from "@elevenlabs/react";
 import { toast } from "@/components/ui/sonner";
 import brainAI from '@/assets/BrainAI.png';
+function safeRandomUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  // fallback za starije browsere ili ograničena okruženja
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 type Turn = { role: "user" | "assistant"; text: string; time: string };
 interface ContactInfo {
@@ -52,12 +64,13 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const [mode, setMode] = useState<"voice" | "chat">("voice");
   const [sessionActive, setSessionActive] = useState(false);
   const [conversationId] = useState<string>(() => {
-    const stored = localStorage.getItem("convId");
-    if (stored) return stored;
-    const id = crypto.randomUUID();
-    localStorage.setItem("convId", id);
-    return id;
-  });
+  const stored = localStorage.getItem("convId");
+  if (stored) return stored;
+  const id = safeRandomUUID(); // ✅ koristimo sigurnu alternativu
+  localStorage.setItem("convId", id);
+  return id;
+});
+
   const [gdprOpen, setGdprOpen] = useState(false);
   const [consentGiven, setConsentGiven] = useState(
     () => localStorage.getItem("consent") === "yes",
