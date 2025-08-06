@@ -44,7 +44,7 @@ app.use("/api/question", questionRouter);
 /* --- POČETAK SERVIRANJA FRONTENDA --- */
 
 // 1) Nađi dist iz korijena projekta
-const clientDistPath = path.resolve(process.cwd(), "dist");
+const clientDistPath = path.resolve(__dirname, "..", "..", "dist");
 
 // 2) Servaj statiku iz /home/conexa/neurobiz.me/dist
 app.use(express.static(clientDistPath));

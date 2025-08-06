@@ -41,7 +41,7 @@ app.use("/api/articles", articles_1.default);
 app.use("/api/question", question_1.default);
 /* --- POČETAK SERVIRANJA FRONTENDA --- */
 // 1) Nađi dist iz korijena projekta
-const clientDistPath = path_1.default.resolve(process.cwd(), "dist");
+const clientDistPath = path_1.default.resolve(__dirname, "..", "..", "dist");
 // 2) Servaj statiku iz /home/conexa/neurobiz.me/dist
 app.use(express_1.default.static(clientDistPath));
 // 3) Sve nerelane GET zahtjeve (koji ne počinju s /api/) vraćaju index.html
