@@ -4,7 +4,10 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 const router = Router();
-const DIR = path.resolve(__dirname, "../../articles");
+const DIR = path.resolve(
+  process.cwd(),
+  process.cwd().endsWith("backend") ? "articles" : "backend/articles"
+);
 const PASS = process.env.ADMIN_PASS as string;
 
 function stripHtml(text: string) {
@@ -56,11 +59,14 @@ router.get("/", async (_req: Request, res: Response) => {
   try {
     const files = (await fs.readdir(DIR)).filter(f => f.endsWith(".json"));
     const data: Article[] = await Promise.all(
-      files.map(async file => JSON.parse(await fs.readFile(path.join(DIR, file), "utf8")))
+      files.map(async file =>
+        JSON.parse(await fs.readFile(path.join(DIR, file), "utf8"))
+      )
     );
     res.json(data);
-  } catch {
-    res.json([]);
+  } catch (err) {
+    console.error("Failed to list articles", err);
+    res.status(500).json({ error: "failed_to_list_articles" });
   }
 });
 
@@ -70,8 +76,10 @@ router.get("/:id", async (req: Request, res: Response) => {
   try {
     const json = JSON.parse(await fs.readFile(p, "utf8"));
     res.json(json);
-  } catch {
-    res.sendStatus(404);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return res.sendStatus(404);
+    console.error("Failed to read article", err);
+    res.status(500).json({ error: "failed_to_read_article" });
   }
 });
 
@@ -83,11 +91,19 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 
 // create article
 router.post("/", async (req: Request, res: Response) => {
-  const id = randomUUID();
-  const article = buildArticle(id, req.body);
-  await fs.mkdir(DIR, { recursive: true });
-  await fs.writeFile(path.join(DIR, `${id}.json`), JSON.stringify(article, null, 2));
-  res.status(201).json(article);
+  try {
+    const id = randomUUID();
+    const article = buildArticle(id, req.body);
+    await fs.mkdir(DIR, { recursive: true });
+    await fs.writeFile(
+      path.join(DIR, `${id}.json`),
+      JSON.stringify(article, null, 2)
+    );
+    res.status(201).json(article);
+  } catch (err) {
+    console.error("Failed to create article", err);
+    res.status(500).json({ error: "failed_to_create_article" });
+  }
 });
 
 // update article
@@ -97,8 +113,11 @@ router.put("/:id", async (req: Request, res: Response) => {
     const article = buildArticle(req.params.id, req.body);
     await fs.writeFile(p, JSON.stringify(article, null, 2));
     res.json(article);
-  } catch {
-    res.sendStatus(404);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT")
+      return res.sendStatus(404);
+    console.error("Failed to update article", err);
+    res.status(500).json({ error: "failed_to_update_article" });
   }
 });
 
@@ -108,8 +127,11 @@ router.delete("/:id", async (req: Request, res: Response) => {
   try {
     await fs.unlink(p);
     res.sendStatus(204);
-  } catch {
-    res.sendStatus(404);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT")
+      return res.sendStatus(404);
+    console.error("Failed to delete article", err);
+    res.status(500).json({ error: "failed_to_delete_article" });
   }
 });
 
