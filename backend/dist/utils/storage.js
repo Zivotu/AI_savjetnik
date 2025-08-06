@@ -3,13 +3,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-
+exports.DIR = void 0;
+exports.ensureDir = ensureDir;
 exports.writeAtomic = writeAtomic;
 exports.appendTurn = appendTurn;
 exports.updateConversation = updateConversation;
 const promises_1 = __importDefault(require("node:fs/promises"));
 const node_path_1 = __importDefault(require("node:path"));
-
+exports.DIR = node_path_1.default.resolve(__dirname, '../../transcripts');
+async function ensureDir() {
+    await promises_1.default.mkdir(exports.DIR, { recursive: true, mode: 0o775 });
+}
+const filePath = (id) => node_path_1.default.join(exports.DIR, `${id}.json`);
+async function readConversation(id) {
+    await ensureDir();
     try {
         return JSON.parse(await promises_1.default.readFile(filePath(id), 'utf8'));
     }
@@ -18,7 +25,7 @@ const node_path_1 = __importDefault(require("node:path"));
     }
 }
 async function writeAtomic(p, data) {
-
+    await promises_1.default.mkdir(exports.DIR, { recursive: true });
     await promises_1.default.writeFile(p, data, "utf8"); // simple, safe on Windows
 }
 async function appendTurn(id, turn) {
