@@ -24,6 +24,7 @@ const BlogPost = () => {
   const [language, setLanguage] = useState<'hr' | 'en'>('hr');
   const [currentPost, setCurrentPost] = useState<Article | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Article[]>([]);
+  const [loadError, setLoadError] = useState(false);
 
   const sanitizedContent = useMemo(() => {
     if (!currentPost) return '';
@@ -66,8 +67,8 @@ const BlogPost = () => {
   }, [currentPost, language]);
 
   useEffect(() => {
-    fetch('/api/articles')
-      .then(r => r.json())
+    fetch("/api/articles")
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(r.statusText)))
       .then((posts: Article[]) => {
         const post = posts.find(p => p.slug === slug);
         if (post) {
@@ -77,8 +78,30 @@ const BlogPost = () => {
             .slice(0, 3);
           setRelatedPosts(related);
         }
+      })
+      .catch(err => {
+        console.error(err);
+        setLoadError(true);
       });
   }, [slug, language]);
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">
+            {language === 'hr' ? 'Greška pri učitavanju članka' : 'Error loading article'}
+          </h1>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-gradient-primary text-white px-6 py-3 rounded-xl font-medium"
+          >
+            {language === 'hr' ? 'Nazad na početnu' : 'Back to home'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentPost) {
     return (
