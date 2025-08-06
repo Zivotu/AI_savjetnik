@@ -1,11 +1,8 @@
 // backend/src/utils/llm.ts
 
 import "dotenv/config";
-import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+let openai: any | null = null;
 
 /**
  * Vraća tekst rješenja (HR ili EN) + CTA
@@ -31,6 +28,11 @@ Vrati samo čisti odgovor bez dodatnih oznaka.`
 
 Return plain text only.`;
 
+  if (!openai) {
+    const { default: OpenAI } = await import("openai");
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+
   const res = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [{ role: "user", content: prompt }],
@@ -50,6 +52,10 @@ export async function summarizeConversation(transcript: string, lang: "hr" | "en
     lang === "hr"
       ? `Sažmi sljedeći razgovor u 2-3 kratke rečenice na hrvatskom jeziku:\n${transcript}`
       : `Summarize the following conversation in 2-3 short sentences:\n${transcript}`;
+  if (!openai) {
+    const { default: OpenAI } = await import("openai");
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
   const res = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [{ role: "user", content: prompt }],
