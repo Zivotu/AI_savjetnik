@@ -11,9 +11,16 @@ if (!process.env.OPENAI_API_KEY || !process.env.ELEVENLABS_API_KEY) {
     console.error('❌ Missing OPENAI_API_KEY or ELEVENLABS_API_KEY environment variables.');
     process.exit(1);
 }
+if (!process.env.HUME_API_KEY) {
+    console.error('❌ Missing HUME_API_KEY environment variable.');
+    process.exit(1);
+}
+const PORT = Number(process.env.PORT) || 3000;
 const server = http_1.default.createServer(server_1.default);
+// Attach Hume STT proxy
 (0, sttProxy_1.attachSttProxy)(server);
+// Attach EVI proxy
 (0, eviProxy_1.attachEviProxy)(server);
-server.listen(3000, () => {
-    console.log('✅ Backend listening on http://localhost:3000');
+server.listen(PORT, () => {
+    console.log(`✅ Backend listening on http://localhost:${PORT}`);
 });
