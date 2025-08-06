@@ -47,8 +47,9 @@ router.get("/", async (_req, res) => {
         const data = await Promise.all(files.map(async (file) => JSON.parse(await promises_1.default.readFile(node_path_1.default.join(DIR, file), "utf8"))));
         res.json(data);
     }
-    catch {
-        res.json([]);
+    catch (err) {
+        console.error("Failed to list articles", err);
+        res.status(500).json({ error: "failed_to_list_articles" });
     }
 });
 // get single article (public)
@@ -58,8 +59,11 @@ router.get("/:id", async (req, res) => {
         const json = JSON.parse(await promises_1.default.readFile(p, "utf8"));
         res.json(json);
     }
-    catch {
-        res.sendStatus(404);
+    catch (err) {
+        if (err.code === "ENOENT")
+            return res.sendStatus(404);
+        console.error("Failed to read article", err);
+        res.status(500).json({ error: "failed_to_read_article" });
     }
 });
 // auth middleware for mutating routes
@@ -70,11 +74,17 @@ router.use((req, res, next) => {
 });
 // create article
 router.post("/", async (req, res) => {
-    const id = (0, node_crypto_1.randomUUID)();
-    const article = buildArticle(id, req.body);
-    await promises_1.default.mkdir(DIR, { recursive: true });
-    await promises_1.default.writeFile(node_path_1.default.join(DIR, `${id}.json`), JSON.stringify(article, null, 2));
-    res.status(201).json(article);
+    try {
+        const id = (0, node_crypto_1.randomUUID)();
+        const article = buildArticle(id, req.body);
+        await promises_1.default.mkdir(DIR, { recursive: true });
+        await promises_1.default.writeFile(node_path_1.default.join(DIR, `${id}.json`), JSON.stringify(article, null, 2));
+        res.status(201).json(article);
+    }
+    catch (err) {
+        console.error("Failed to create article", err);
+        res.status(500).json({ error: "failed_to_create_article" });
+    }
 });
 // update article
 router.put("/:id", async (req, res) => {
@@ -84,8 +94,11 @@ router.put("/:id", async (req, res) => {
         await promises_1.default.writeFile(p, JSON.stringify(article, null, 2));
         res.json(article);
     }
-    catch {
-        res.sendStatus(404);
+    catch (err) {
+        if (err.code === "ENOENT")
+            return res.sendStatus(404);
+        console.error("Failed to update article", err);
+        res.status(500).json({ error: "failed_to_update_article" });
     }
 });
 // delete article
@@ -95,8 +108,11 @@ router.delete("/:id", async (req, res) => {
         await promises_1.default.unlink(p);
         res.sendStatus(204);
     }
-    catch {
-        res.sendStatus(404);
+    catch (err) {
+        if (err.code === "ENOENT")
+            return res.sendStatus(404);
+        console.error("Failed to delete article", err);
+        res.status(500).json({ error: "failed_to_delete_article" });
     }
 });
 exports.default = router;
