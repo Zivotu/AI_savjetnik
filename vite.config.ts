@@ -22,19 +22,7 @@ export default defineConfig(({ mode }) => ({
       "/api": {
         target: "http://localhost:3000",
         changeOrigin: true,
-      },
-      "/stt": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-      },
-      "/evi": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-      },
+      }, // proxy all /api requests to backend
     },
   },
 }));

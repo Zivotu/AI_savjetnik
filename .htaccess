@@ -1,0 +1,7 @@
+# Prevent /api requests from being rewritten to the SPA
+RewriteRule ^api/ - [L]
+
+# React SPA fallback for other routes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
