@@ -8,7 +8,7 @@ const promises_1 = __importDefault(require("node:fs/promises"));
 const node_path_1 = __importDefault(require("node:path"));
 const node_crypto_1 = require("node:crypto");
 const router = (0, express_1.Router)();
-const DIR = node_path_1.default.resolve(process.cwd(), process.cwd().endsWith("backend") ? "articles" : "backend/articles");
+const DIR = node_path_1.default.resolve(__dirname, "../../articles");
 const PASS = process.env.ADMIN_PASS;
 function stripHtml(text) {
     return text.replace(/<[^>]*>/g, "");
@@ -49,7 +49,7 @@ router.get("/", async (_req, res) => {
     }
     catch (err) {
         console.error("Failed to list articles", err);
-        res.status(500).json({ error: "failed_to_list_articles" });
+        return res.json([]);
     }
 });
 // get single article (public)
