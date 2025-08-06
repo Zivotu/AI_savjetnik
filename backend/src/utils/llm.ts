@@ -1,6 +1,5 @@
 // backend/src/utils/llm.ts
 
-import "dotenv/config";
 
 let openai: any | null = null;
 

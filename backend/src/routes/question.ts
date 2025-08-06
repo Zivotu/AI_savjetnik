@@ -1,8 +1,5 @@
 import { Router, Request, Response } from "express";
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 interface QuestionBody {
   firstName: string;
