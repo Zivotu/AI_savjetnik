@@ -67,14 +67,18 @@ router.get("/", async (_req: Request, res: Response) => {
   }
 });
 
-// get single article (public)
-router.get("/:id", async (req: Request, res: Response) => {
-  const p = path.join(DIR, `${req.params.id}.json`);
+// get single article by slug (public)
+router.get("/:slug", async (req: Request, res: Response) => {
   try {
-    const json = JSON.parse(await fs.readFile(p, "utf8"));
-    res.json(json);
+    const files = (await fs.readdir(DIR)).filter(f => f.endsWith(".json"));
+    for (const file of files) {
+      const json: Article = JSON.parse(
+        await fs.readFile(path.join(DIR, file), "utf8")
+      );
+      if (json.slug === req.params.slug) return res.json(json); // return if slug matches
+    }
+    res.sendStatus(404); // slug not found
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return res.sendStatus(404);
     console.error("Failed to read article", err);
     res.status(500).json({ error: "failed_to_read_article" });
   }
