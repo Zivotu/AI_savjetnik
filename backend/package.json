@@ -4,9 +4,9 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "prestart": "mkdir -p transcripts && chmod 775 transcripts",
+    "prestart": "node -e \"const fs=require('fs');const dir='transcripts';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});try{fs.chmodSync(dir,0o775);}catch(e){/* ignore on Windows */}\"",
     "start": "node dist/index.js",
-    "predev": "mkdir -p transcripts && chmod 775 transcripts",
+    "predev": "node -e \"const fs=require('fs');const dir='transcripts';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});try{fs.chmodSync(dir,0o775);}catch(e){/* ignore on Windows */}\"",
     "dev": "ts-node-dev --respawn --prefer-ts-exts src/index.ts"
   },
   "dependencies": {
