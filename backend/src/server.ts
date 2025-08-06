@@ -31,6 +31,11 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next();
 });
 
+/* --- ZDRAVSTVENI CHECK --- */
+app.get("/health", (_req: Request, res: Response) => {
+  return res.json({ ok: true });
+});
+
 /* API rute */
 app.use("/api/agent", agentRouter);
 app.use("/api/tts", ttsRouter);
@@ -41,26 +46,27 @@ app.use("/api/elevenlabs/sendEmail", sendEmailRouter);
 app.use("/api/articles", articlesRouter);
 app.use("/api/question", questionRouter);
 
-/* --- POČETAK SERVIRANJA FRONTENDA --- */
+/* --- SERVIRANJE FRONTENDA --- */
+// 1) Putanja do /dist iz korijena projekta, koristeći __dirname iz backend/dist
+const clientDistPath = path.resolve(__dirname, "../../dist");
 
-// 1) Nađi dist iz korijena projekta
-const clientDistPath = path.resolve(process.cwd(), "dist");
-
-// 2) Servaj statiku iz /home/conexa/neurobiz.me/dist
+// 2) Serviraj statičke fajlove
 app.use(express.static(clientDistPath));
 
-// 3) Sve nerelane GET zahtjeve (koji ne počinju s /api/) vraćaju index.html
+// 3) SPA fallback: sve što nije /api/* servira index.html
 app.get(/^(?!\/api\/).*/, (_req: Request, res: Response) => {
   res.sendFile(path.join(clientDistPath, "index.html"));
 });
 
-/* --- KRAJ SERVIRANJA FRONTENDA --- */
-
 /* 404 + error handler */
-app.use((_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));
-app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(err);
-  res.status(500).json({ error: "internal_error" });
-});
+app.use((_req: Request, res: Response) =>
+  res.status(404).json({ error: "not_found" })
+);
+app.use(
+  (err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    console.error(err);
+    res.status(500).json({ error: "internal_error" });
+  }
+);
 
 export default app;
