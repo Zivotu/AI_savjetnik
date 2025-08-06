@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
-import nodemailer from "nodemailer";
+
+let nodemailer: typeof import("nodemailer") | undefined;
 
 const router = Router();
 
@@ -21,6 +22,9 @@ router.post("/", async (req: Request, res: Response) => {
 
   try {
     /* 1) Nodemailer transporter */
+    if (!nodemailer) {
+      nodemailer = (await import("nodemailer")).default;
+    }
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
