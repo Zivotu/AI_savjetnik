@@ -7,6 +7,7 @@ require("dotenv/config");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const path_1 = __importDefault(require("path"));
 const sendEmail_1 = __importDefault(require("./routes/sendEmail"));
 const agent_1 = __importDefault(require("./routes/agent"));
 const tts_1 = __importDefault(require("./routes/tts"));
@@ -38,6 +39,8 @@ app.use("/api/elevenlabs/summary", summary_1.default);
 app.use("/api/elevenlabs/sendEmail", sendEmail_1.default);
 app.use("/api/articles", articles_1.default);
 app.use("/api/question", question_1.default);
+app.use(express_1.default.static(path_1.default.resolve(__dirname, "../../dist")));
+app.get("*", (_req, res) => res.sendFile(path_1.default.resolve(__dirname, "../../dist/index.html")));
 /* 404 + error */
 app.use((_req, res) => res.status(404).json({ error: "not_found" }));
 app.use((err, _req, res, _next) => {
