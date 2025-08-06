@@ -22,6 +22,7 @@ function attachSttProxy(server) {
             return;
         wss.handleUpgrade(req, socket, head, (client) => {
             const provider = process.env.STT_PROVIDER ?? 'elevenlabs';
+            console.log(`🔊  STT provider = ${provider}`);
             const upstream = provider === 'elevenlabs'
                 ? new ws_1.WebSocket('wss://api.elevenlabs.io/v1/speech-to-text/ws', undefined, {
                     headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY ?? '' },

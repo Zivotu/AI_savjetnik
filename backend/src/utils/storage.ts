@@ -29,6 +29,7 @@ async function readConversation(id: string) {
 }
 
 export async function writeAtomic(p: string, data: string) {
+  await fs.mkdir(DIR, { recursive: true });
   await fs.writeFile(p, data, "utf8");        // simple, safe on Windows
 }
 
