@@ -1,0 +1,405 @@
+{
+  "id": "6c1b5186-0708-4c6d-b933-00dc9a3d0b68",
+  "created": "2025-08-04T00:01:15.917Z",
+  "turns": [
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-04T00:01:15.917Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-04T00:01:18.430Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-04T00:02:33.564Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-04T00:02:35.598Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-04T00:17:15.227Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-04T00:17:18.636Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-04T12:57:37.402Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-04T12:57:43.086Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Žao mi je, nisam razumio. Možete li ponoviti?",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-04T12:57:49.120Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-04T12:58:01.538Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-04T12:58:06.683Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:01:27.215Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:01:37.189Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:01:55.575Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:01:57.359Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:11:29.738Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:14:57.463Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:14:59.421Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:15:05.871Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:15:07.745Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:18:38.541Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:18:40.487Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:18:46.892Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:18:48.810Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:18:58.711Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:19:00.548Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:32:51.474Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:32:53.392Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T00:56:07.501Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:56:09.304Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Naravno! Umjetna inteligencija je kao pametni pomoćnik – uči iz podataka i pomaže ti donositi brže odluke. Konkretno, može automatizirati slanje e-mailova, što ti štedi vrijeme.\n\nKoje vrste e-mailova šalješ? Da li su to ponude, podsjetnici ili nešto treće?\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:56:39.651Z"
+    },
+    {
+      "role": "user",
+      "text": "Pa... šaljem mailove, zapravo me zanima što je uopće umjetna inteligencija, mi možeš objasniti.",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:56:40.648Z"
+    },
+    {
+      "role": "user",
+      "text": "Daj mi još par primjera što je to. Daj mi u stvari povijest umjetne inteligencije.",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:57:02.413Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Razumijem! AI je stvarno široko polje, ali evo par primjera:\n\n   U kafiću: Konobar ručno zbraja artikle na kraju dana. AI može automatski generirati izvještaj o prodaji.\n   U građevinskoj tvrtki: Inženjer fotka terenske radove i ručno radi izvještaj. AI može automatski generirati PDF izvještaj.\n   Za webshop: Dnevno imaš puno upita “gdje je moja pošiljka?”. AI može odgovoriti na ta pitanja putem chata.\n\nŠto se tiče povijesti AI-a, to je duga priča, ali ukratko:\n   Počeci su bili davnih pedesetih godina, s idejom stvaranja strojeva koji razmišljaju.\n   Kasnije su se razvili koncepti strojnog učenja, gdje računala uče iz podataka.\n   Danas imamo nevjerojatne alate koji nam olakšavaju posao.\n\nŠto se tiče slanja e-mailova, da li šalješ iste poruke više puta?\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:57:02.696Z"
+    },
+    {
+      "role": "user",
+      "text": "Hvala.",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:57:39.594Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Nema na čemu! Ako ti treba još informacija ili želiš da ti predložim neko rješenje za automatizaciju slanja e-mailova, samo mi reci. \n\nTrebam tvoj mail ili mobitel da ti pošaljemo PDF s idućim koracima — može?",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T00:57:40.336Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T01:03:43.758Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T01:04:41.853Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T01:04:43.634Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T01:05:16.898Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T01:05:18.841Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T01:16:28.262Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T01:16:32.060Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T18:52:16.544Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:52:20.053Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T18:55:41.504Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:55:48.947Z"
+    },
+    {
+      "role": "user",
+      "text": "...",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:56:22.898Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Žao mi je što te moram ponovno pitati, ali nisam primio odgovor. Jesi li još uvijek tu? Još uvijek te čekam da mi kažeš što ti trenutno oduzima najviše vremena ili živaca.\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:56:23.586Z"
+    },
+    {
+      "role": "user",
+      "text": "...",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:56:40.824Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Žao mi je, ali još uvijek nisam dobio odgovor. Reci mi, što ti trenutno oduzima najviše vremena ili živaca?\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:56:41.121Z"
+    },
+    {
+      "role": "user",
+      "text": "...",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:56:55.757Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Žao mi je, ali još uvijek nisam dobio odgovor. Jesi li još uvijek tu?\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:56:55.945Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-05T18:59:01.680Z"
+    },
+    {
+      "role": "assistant",
+      "text": "> **Bok! Ja sam Bubi – tvoj AI savjetnik.**  \n> U sljedećih 90 sekundi mogu ti pokazati kako ti umjetna inteligencija može uštedjeti sate rutinskog posla svaki tjedan.  \n> Sve je opcionalno – samo mi reci što te najviše živcira, pa da vidimo jedno brzo AI rješenje.  \n> **Krenimo: koji ti zadatak trenutno troši najviše vremena ili živaca?**\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:59:06.527Z"
+    },
+    {
+      "role": "user",
+      "text": "Odličan!",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:59:13.161Z"
+    },
+    {
+      "role": "assistant",
+      "text": "Odlično! Drago mi je da se čujemo. Reci mi, što ti trenutno oduzima najviše vremena u poslu? Što bi volio/voljela poboljšati?\n",
+      "phase": "idle",
+      "mode": "voice",
+      "ts": "2025-08-05T18:59:13.703Z"
+    }
+  ]
+}

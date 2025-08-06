@@ -1,12 +1,21 @@
 {
   "name": "backend",
   "version": "1.0.0",
+  "description": "Express API server for AI Savjetnik",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=16"
+  },
   "scripts": {
-    "build": "tsc",
-    "prestart": "node -e \"const fs=require('fs');const dir='transcripts';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});try{fs.chmodSync(dir,0o775);}catch(e){/* ignore on Windows */}\"",
+
+    "build": "tsc --project tsconfig.json",
+
+
+    "prestart": "node -e \"const fs=require('fs'), dir='transcripts'; if(!fs.existsSync(dir)) fs.mkdirSync(dir,{recursive:true}); try{fs.chmodSync(dir,0o775)}catch{}\"",
+
     "start": "node dist/index.js",
-    "predev": "node -e \"const fs=require('fs');const dir='transcripts';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});try{fs.chmodSync(dir,0o775);}catch(e){/* ignore on Windows */}\"",
+
+    "predev": "node -e \"const fs=require('fs'), dir='transcripts'; if(!fs.existsSync(dir)) fs.mkdirSync(dir,{recursive:true}); try{fs.chmodSync(dir,0o775)}catch{}\"",
     "dev": "ts-node-dev --respawn --prefer-ts-exts src/index.ts"
   },
   "dependencies": {
@@ -27,8 +36,5 @@
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "license": "ISC"
 }

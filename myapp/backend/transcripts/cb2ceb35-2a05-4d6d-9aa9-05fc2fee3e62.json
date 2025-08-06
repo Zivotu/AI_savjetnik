@@ -1,0 +1,30 @@
+{
+  "id": "cb2ceb35-2a05-4d6d-9aa9-05fc2fee3e62",
+  "created": "2025-08-02T10:52:36.874Z",
+  "turns": [
+    {
+      "role": "system",
+      "text": "CONSENT_GIVEN",
+      "ts": "2025-08-02T10:52:36.874Z"
+    },
+    {
+      "role": "system",
+      "text": "CONSENT_GIVEN",
+      "ts": "2025-08-02T10:52:38.195Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-02T10:52:38.210Z"
+    },
+    {
+      "role": "user",
+      "text": "[CALL_STARTED]",
+      "phase": "intro",
+      "mode": "voice",
+      "ts": "2025-08-02T10:53:52.492Z"
+    }
+  ]
+}
