@@ -4,7 +4,9 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "prestart": "mkdir -p transcripts && chmod 775 transcripts",
     "start": "node dist/index.js",
+    "predev": "mkdir -p transcripts && chmod 775 transcripts",
     "dev": "ts-node-dev --respawn --prefer-ts-exts src/index.ts"
   },
   "dependencies": {

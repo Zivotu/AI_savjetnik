@@ -6,8 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const promises_1 = __importDefault(require("node:fs/promises"));
 const node_path_1 = __importDefault(require("node:path"));
+const storage_1 = require("../utils/storage");
 const router = (0, express_1.Router)();
-const DIR = node_path_1.default.resolve(__dirname, "../../transcripts");
 const PASS = process.env.ADMIN_PASS;
 /* auth - middleware */
 router.use((req, res, next) => {
@@ -17,9 +17,7 @@ router.use((req, res, next) => {
 });
 /** GET /api/transcripts – list */
 router.get("/", async (_req, res) => {
-    const files = (await promises_1.default.readdir(DIR)).filter(f => f.endsWith(".json"));
-    const data = await Promise.all(files.map(async (file) => {
-        const json = JSON.parse(await promises_1.default.readFile(node_path_1.default.join(DIR, file), "utf8"));
+
         return {
             id: json.id,
             created: json.created ?? "",
@@ -32,7 +30,8 @@ router.get("/", async (_req, res) => {
 });
 /** GET /api/transcripts/:id – full JSON */
 router.get("/:id", async (req, res) => {
-    const p = node_path_1.default.join(DIR, `${req.params.id}.json`);
+    await (0, storage_1.ensureDir)();
+    const p = node_path_1.default.join(storage_1.DIR, `${req.params.id}.json`);
     try {
         const json = JSON.parse(await promises_1.default.readFile(p, "utf8"));
         res.json(json);
@@ -43,7 +42,8 @@ router.get("/:id", async (req, res) => {
 });
 /** DELETE /api/transcripts/:id */
 router.delete("/:id", async (req, res) => {
-    const p = node_path_1.default.join(DIR, `${req.params.id}.json`);
+    await (0, storage_1.ensureDir)();
+    const p = node_path_1.default.join(storage_1.DIR, `${req.params.id}.json`);
     try {
         await promises_1.default.unlink(p);
         res.sendStatus(204);
