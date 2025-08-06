@@ -1,6 +1,5 @@
 // backend/src/utils/llm.ts
 
-import "dotenv/config";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
