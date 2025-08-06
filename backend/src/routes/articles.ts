@@ -4,10 +4,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 const router = Router();
-const DIR = path.resolve(
-  process.cwd(),
-  process.cwd().endsWith("backend") ? "articles" : "backend/articles"
-);
+const DIR = path.resolve(__dirname, "../../articles");
 const PASS = process.env.ADMIN_PASS as string;
 
 function stripHtml(text: string) {
