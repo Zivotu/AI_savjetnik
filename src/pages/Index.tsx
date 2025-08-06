@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import AgentPanel from '@/components/AgentPanel';
 import QuestionModal from '@/components/QuestionModal';
 import BlogCard from '@/components/BlogCard';
+import introAudio from '@/assets/Intro.mp3';
 
 interface Article {
   id: string;
@@ -59,7 +60,7 @@ const HeadphonesNotification = ({ language, isVisible, onClose }: {
   useEffect(() => {
     if (isVisible) {
       // Pokretanje zvuka Intro.mp3
-      const audio = new Audio('/assets/Intro.mp3');
+      const audio = new Audio(introAudio);
       audio.play().catch(err => {
         console.log('Audio autoplay blocked:', err);
       });
