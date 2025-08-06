@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
+import path from "path";
 
 import sendEmailRouter from "./routes/sendEmail";
 import agentRouter from "./routes/agent";
@@ -39,6 +40,11 @@ app.use("/api/elevenlabs/summary", summaryRouter);
 app.use("/api/elevenlabs/sendEmail", sendEmailRouter);
 app.use("/api/articles", articlesRouter);
 app.use("/api/question", questionRouter);
+
+app.use(express.static(path.resolve(__dirname, "../../dist")));
+app.get("*", (_req: Request, res: Response) =>
+  res.sendFile(path.resolve(__dirname, "../../dist/index.html"))
+);
 
 /* 404 + error */
 app.use((_req: Request, res: Response) => res.status(404).json({ error: "not_found" }));

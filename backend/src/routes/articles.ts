@@ -4,10 +4,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 
 const router = Router();
-const DIR = path.resolve(
-  process.cwd(),
-  process.cwd().endsWith("backend") ? "articles" : "backend/articles"
-);
+const DIR = path.resolve(__dirname, "../../articles");
 const PASS = process.env.ADMIN_PASS as string;
 
 function stripHtml(text: string) {
@@ -66,7 +63,7 @@ router.get("/", async (_req: Request, res: Response) => {
     res.json(data);
   } catch (err) {
     console.error("Failed to list articles", err);
-    res.status(500).json({ error: "failed_to_list_articles" });
+    return res.json([]);
   }
 });
 

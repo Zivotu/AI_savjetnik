@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "buildCommand": "npm run vercel-build",
   "builds": [
     {
       "src": "api/index.ts",
@@ -10,6 +11,10 @@
     {
       "src": "/api/(.*)",
       "dest": "api/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/$1"
     }
   ],
   "functions": {
