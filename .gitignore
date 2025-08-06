@@ -31,4 +31,5 @@ node_modules
 *.sw?
 
 # Backend transcripts
-backend/transcripts/
+backend/transcripts/*
+!backend/transcripts/.gitkeep

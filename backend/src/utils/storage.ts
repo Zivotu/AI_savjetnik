@@ -1,7 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const DIR = path.resolve(__dirname, '../../transcripts');
+export const DIR = path.resolve(__dirname, '../../transcripts');
+
+export async function ensureDir() {
+  await fs.mkdir(DIR, { recursive: true, mode: 0o775 });
+}
 
 type Turn = {
   role: 'user' | 'assistant' | 'tool';
@@ -16,6 +20,7 @@ type Turn = {
 const filePath = (id: string) => path.join(DIR, `${id}.json`);
 
 async function readConversation(id: string) {
+  await ensureDir();
   try {
     return JSON.parse(await fs.readFile(filePath(id), 'utf8'));
   } catch {
