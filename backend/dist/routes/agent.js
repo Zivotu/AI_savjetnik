@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
                 finishedAt: new Date().toISOString(),
             });
         }
-        res.status(200).json({ success: true });
+        res.status(200).json({ error: null });
     }
     catch (err) {
         console.error(err);
