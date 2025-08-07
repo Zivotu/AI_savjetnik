@@ -249,7 +249,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       .map((m) => `${m.role === "user" ? "User" : "Agent"}: ${m.text}`)
       .join("\n");
     try {
-      const sumRes = await fetch("/api/summary", {
+      const sumRes = await fetch("/api/elevenlabs/summary", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -284,7 +284,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       }
       const solutionText = `${sol.solutionText}\n${sol.cta}`;
       if (contactRef.current) {
-        await fetch("/api/sendEmail", {
+        await fetch("/api/elevenlabs/sendEmail", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -296,7 +296,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         });
       }
       setSolutionTextState(solutionText);
-        setSolutionOpen(true);
         {
           const res = await fetch("/api/agent", {
             method: "POST",
@@ -332,6 +331,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       const blob = await ttsRes.blob();
         const url = URL.createObjectURL(blob);
         new Audio(url).play();
+        setSolutionOpen(true);
         {
           const res = await fetch("/api/agent", {
             method: "POST",
@@ -463,7 +463,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data as string);
-        if (data.audio_output?.data) {
+        if (data.audio_output?.data && !mutedRef.current) {
           setActiveSpeaker("agent");
           player.enqueueBase64(data.audio_output.data);
         }

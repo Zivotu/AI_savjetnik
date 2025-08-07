@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Headphones } from 'lucide-react';
 import Header from '@/components/Header';
 import AgentPanel from '@/components/AgentPanel';
 import QuestionModal from '@/components/QuestionModal';
 import BlogCard from '@/components/BlogCard';
-import introAudio from '@/assets/Intro.mp3';
 
 interface Article {
   id: string;
@@ -41,30 +40,23 @@ const HeadphonesNotification = ({ language, isVisible, onClose }: {
   onClose: () => void; 
 }) => {
   const [showTypewriter, setShowTypewriter] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const texts = {
     hr: {
       mainText: "Kako bismo vam osigurali vrhunsko korisničko iskustvo, preporučujemo korištenje slušalica.",
       subText: "Na taj će način naš sustav besprijekorno prepoznati vaš glas, bez ometanja zbog povratnog zvuka iz zvučnika.",
-      closeButton: "ZATVORI",
-      playIntro: "POKRENI INTRO"
+      closeButton: "ZATVORI"
     },
     en: {
       mainText: "For the best user experience, we recommend using headphones.",
       subText: "This way our system will flawlessly recognize your voice, without interference from feedback sound from the speakers.",
-      closeButton: "CLOSE",
-      playIntro: "PLAY INTRO"
+      closeButton: "CLOSE"
     }
   };
 
   const currentTexts = texts[language];
 
   useEffect(() => {
-    if (isVisible && !audioRef.current) {
-      audioRef.current = new Audio(introAudio);
-      audioRef.current.muted = true;
-    }
     if (isVisible) {
       const timer = setTimeout(() => {
         setShowTypewriter(true);
@@ -72,21 +64,6 @@ const HeadphonesNotification = ({ language, isVisible, onClose }: {
       return () => clearTimeout(timer);
     }
   }, [isVisible]);
-
-  const handlePlayIntro = () => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio(introAudio);
-      audioRef.current.muted = true;
-    }
-    audioRef.current
-      .play()
-      .then(() => {
-        if (audioRef.current) audioRef.current.muted = false;
-      })
-      .catch(err => {
-        console.log('Audio playback failed:', err);
-      });
-  };
 
   if (!isVisible) return null;
 
@@ -165,18 +142,6 @@ const HeadphonesNotification = ({ language, isVisible, onClose }: {
               ))}
             </div>
           </div>
-
-          {/* Play Intro Button */}
-          <button
-            onClick={handlePlayIntro}
-            className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl text-lg mb-4"
-            style={{
-              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-              boxShadow: '0 10px 30px rgba(59,130,246,0.3)'
-            }}
-          >
-            {currentTexts.playIntro}
-          </button>
 
           {/* Close Button */}
           <button
@@ -348,17 +313,11 @@ const Index = () => {
               >
                 {language === 'hr' ? 'Privatnost' : 'Privacy'}
               </a>
-              <a 
-                href="/terms" 
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                {language === 'hr' ? 'Uvjeti' : 'Terms'}
-              </a>
-              <a 
-                href="/admin" 
+              <a
+                href="/admin"
                 className="text-xs text-muted-foreground/50 hover:text-primary transition-colors"
               >
-                admin
+                •
               </a>
             </div>
           </div>

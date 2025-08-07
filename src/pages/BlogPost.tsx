@@ -249,12 +249,6 @@ const BlogPost = () => {
               >
                 {language === 'hr' ? 'Privatnost' : 'Privacy'}
               </a>
-              <a
-                href="/terms"
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                {language === 'hr' ? 'Uvjeti' : 'Terms'}
-              </a>
             </div>
           </div>
         </div>
