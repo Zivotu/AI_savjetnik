@@ -20,13 +20,12 @@ router.post('/', async (req, res) => {
                 finishedAt: new Date().toISOString(),
             });
         }
-        res.status(200).json({ ok: true });
+        res.status(200).json({ success: true });
     }
     catch (err) {
         console.error(err);
         res.status(500).json({
-            error: 'Failed to update conversation',
-            message: err instanceof Error ? err.message : String(err),
+            error: err instanceof Error ? err.message : 'Unknown error',
         });
     }
 });
