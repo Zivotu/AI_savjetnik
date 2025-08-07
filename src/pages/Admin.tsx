@@ -35,8 +35,20 @@ export default function Admin() {
 
   function handleDelete(id: string) {
     if (!confirm("Delete transcript?")) return;
-    fetch(`/api/transcripts/${id}`, { method:"DELETE",headers:{ "x-admin-pass": pass } })
-      .then(()=> setRows(rows.filter(r=>r.id!==id)));
+    fetch(`/api/transcripts/${id}`, { method: "DELETE", headers: { "x-admin-pass": pass } })
+      .then(() => setRows(rows.filter(r => r.id !== id)));
+  }
+
+  if (!pass) {
+    return (
+      <PasswordModal
+        open
+        onSubmit={p => {
+          sessionStorage.setItem("adminPass", p);
+          setPass(p);
+        }}
+      />
+    );
   }
 
   return (
@@ -118,14 +130,6 @@ export default function Admin() {
       ) : (
         <Articles pass={pass} />
       )}
-
-      <PasswordModal
-        open={!pass}
-        onSubmit={p => {
-          sessionStorage.setItem("adminPass", p);
-          setPass(p);
-        }}
-      />
     </div>
   );
 }
