@@ -1,76 +1,26 @@
 import { Router, Request, Response } from "express";
+import OpenAI from "openai";
 
-// Router for text-to-speech proxy. Switch provider via env TTS_PROVIDER=[hume|elevenlabs] (default elevenlabs)
 const router = Router();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
 router.post('/', async (req: Request, res: Response) => {
-  const { text, voiceId = process.env.ELEVENLABS_VOICE_ID, modelId = 'eleven_multilingual_v2' } = req.body as {
-    text?: string;
-    voiceId?: string;
-    modelId?: string;
-  };
-
+  const { text } = req.body as { text?: string };
   if (!text) {
-    res.status(400).json({ error: 'Missing text' });
+    res.status(400).json({ success: false, error: { code: 'missing_text', message: 'Missing text' } });
     return;
   }
-
   try {
-    const provider = process.env.TTS_PROVIDER ?? 'elevenlabs';
-
-    if (provider === 'hume') {
-      const apiRes = await fetch('https://api.hume.ai/v0/tts/stream/file', {
-        method: 'POST',
-        headers: {
-          'X-Hume-Api-Key': process.env.HUME_API_KEY ?? '',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          utterances: [{ text }],
-          format: { type: 'wav' },
-        }),
-      });
-
-      if (!apiRes.ok) {
-        const data = await apiRes.json().catch(() => ({}));
-        res.status(apiRes.status).json({ error: data.error || data.message });
-        return;
-      }
-
-      res.status(apiRes.status);
-      res.setHeader('Content-Type', 'audio/wav');
-      (apiRes.body as any)?.pipe(res as any);
-      return;
-    }
-
-    const apiRes = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
-      {
-        method: 'POST',
-        headers: {
-          'xi-api-key': process.env.ELEVENLABS_API_KEY ?? '',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text,
-          model_id: modelId,
-          voice_settings: { similarity_boost: 0.5, stability: 0.35 },
-        }),
-      }
-    );
-
-    if (!apiRes.ok) {
-      const data = await apiRes.json().catch(() => ({}));
-      res.status(apiRes.status).json({ error: data.error || data.message });
-      return;
-    }
-
-    // Propagate status and headers then pipe stream to client
-    res.status(apiRes.status);
-    res.setHeader('Content-Type', apiRes.headers.get('Content-Type') || 'audio/mpeg');
-    (apiRes.body as any)?.pipe(res as any);
+    const speech = await openai.audio.speech.create({
+      model: process.env.OPENAI_TTS_MODEL!,
+      voice: 'alloy',
+      input: text,
+      format: 'wav',
+    });
+    const buf = Buffer.from(await speech.arrayBuffer());
+    res.json({ success: true, error: null, data: { audio: buf.toString('base64') } });
   } catch (err) {
-    res.status(500).json({ error: 'TTS request failed' });
+    res.status(500).json({ success: false, error: { code: 'tts_failed', message: (err as Error).message } });
   }
 });
 

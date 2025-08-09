@@ -32,19 +32,14 @@ This project is built with:
 ## Troubleshooting voice features
 
 If audio transcription or text-to-speech is not working, verify that the required
-environment variables are present:
+OpenAI environment variables are present:
 
-- `ELEVENLABS_API_KEY` – API key used when connecting to ElevenLabs.
-- `ELEVENLABS_VOICE_ID` – voice identifier for text‑to‑speech.
-- `VITE_ELEVEN_AGENT_ID` – agent identifier for ElevenLabs WebRTC voice.
-- `TTS_PROVIDER` – choose `elevenlabs` (default) or `hume`.
-- `STT_PROVIDER` – choose `elevenlabs` (default) or `hume`.
-- `HUME_API_KEY` and `HUME_SECRET_KEY` – needed when using Hume services.
-
-Free ElevenLabs accounts do not support streaming speech recognition. If you just
-need text chat, create a `.env` file and set `DISABLE_STT=1` before starting the
-backend.
-
+- `OPENAI_API_KEY` – API key for all OpenAI requests.
+- `OPENAI_REALTIME_MODEL` – model name for Realtime WebRTC sessions.
+- `OPENAI_CHAT_MODEL` – model used for text responses.
+- `OPENAI_TTS_MODEL` – model used for text‑to‑speech.
+- `OPENAI_STT_MODEL` – model used for speech‑to‑text.
+Set `DISABLE_STT=1` in `.env` to disable streaming speech recognition during development.
 Make sure your browser or device has granted microphone permission. If problems
 persist, check the terminal running `npm run dev:server` for speech‑to‑text
 errors.

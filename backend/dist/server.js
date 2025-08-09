@@ -7,14 +7,15 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const path_1 = __importDefault(require("path"));
-const sendEmail_1 = __importDefault(require("./routes/sendEmail"));
 const agent_1 = __importDefault(require("./routes/agent"));
 const tts_1 = __importDefault(require("./routes/tts"));
 const transcripts_1 = __importDefault(require("./routes/transcripts"));
 const solution_1 = __importDefault(require("./routes/solution"));
-const summary_1 = __importDefault(require("./routes/summary"));
 const articles_1 = __importDefault(require("./routes/articles"));
 const question_1 = __importDefault(require("./routes/question"));
+const realtime_1 = __importDefault(require("./routes/realtime"));
+const summary_1 = __importDefault(require("./routes/summary"));
+const sendEmail_1 = __importDefault(require("./routes/sendEmail"));
 const app = (0, express_1.default)();
 /* middlewares */
 app.use((0, cors_1.default)());
@@ -38,10 +39,11 @@ app.use("/api/agent", agent_1.default);
 app.use("/api/tts", tts_1.default);
 app.use("/api/transcripts", transcripts_1.default);
 app.use("/api/solution", solution_1.default);
-app.use("/api/elevenlabs/summary", summary_1.default);
-app.use("/api/elevenlabs/sendEmail", sendEmail_1.default);
 app.use("/api/articles", articles_1.default);
 app.use("/api/question", question_1.default);
+app.use("/api/realtime", realtime_1.default);
+app.use("/api/summary", summary_1.default);
+app.use("/api/sendEmail", sendEmail_1.default);
 /* --- SERVIRANJE FRONTENDA --- */
 // 1) Putanja do /dist iz korijena projekta, koristeći __dirname iz backend/dist
 const clientDistPath = path_1.default.resolve(__dirname, "../../dist");

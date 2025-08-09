@@ -3,14 +3,15 @@ import cors from "cors";
 import rateLimit from "express-rate-limit";
 import path from "path";
 
-import sendEmailRouter from "./routes/sendEmail";
 import agentRouter from "./routes/agent";
 import ttsRouter from "./routes/tts";
 import transcriptsRouter from "./routes/transcripts";
 import solutionRouter from "./routes/solution";
-import summaryRouter from "./routes/summary";
 import articlesRouter from "./routes/articles";
 import questionRouter from "./routes/question";
+import realtimeRouter from "./routes/realtime";
+import summaryRouter from "./routes/summary";
+import sendEmailRouter from "./routes/sendEmail";
 
 const app = express();
 
@@ -40,10 +41,11 @@ app.use("/api/agent", agentRouter);
 app.use("/api/tts", ttsRouter);
 app.use("/api/transcripts", transcriptsRouter);
 app.use("/api/solution", solutionRouter);
-app.use("/api/elevenlabs/summary", summaryRouter);
-app.use("/api/elevenlabs/sendEmail", sendEmailRouter);
 app.use("/api/articles", articlesRouter);
 app.use("/api/question", questionRouter);
+app.use("/api/realtime", realtimeRouter);
+app.use("/api/summary", summaryRouter);
+app.use("/api/sendEmail", sendEmailRouter);
 
 /* --- SERVIRANJE FRONTENDA --- */
 // 1) Putanja do /dist iz korijena projekta, koristeći __dirname iz backend/dist

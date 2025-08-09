@@ -6,22 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
 const http_1 = __importDefault(require("http"));
 const server_1 = __importDefault(require("./server"));
-const sttProxy_1 = require("./sttProxy");
-const eviProxy_1 = require("./eviProxy");
-if (!process.env.OPENAI_API_KEY || !process.env.ELEVENLABS_API_KEY) {
-    console.error('❌ Missing OPENAI_API_KEY or ELEVENLABS_API_KEY environment variables.');
-    process.exit(1);
-}
-if (!process.env.HUME_API_KEY) {
-    console.error('❌ Missing HUME_API_KEY environment variable.');
+if (!process.env.OPENAI_API_KEY) {
+    console.error('❌ Missing OPENAI_API_KEY environment variable.');
     process.exit(1);
 }
 const PORT = Number(process.env.PORT) || 3000;
 const server = http_1.default.createServer(server_1.default);
-// Attach Hume STT proxy
-(0, sttProxy_1.attachSttProxy)(server);
-// Attach EVI proxy
-(0, eviProxy_1.attachEviProxy)(server);
+// Additional proxies are no longer required after migration to OpenAI
 server.listen(PORT, () => {
     console.log(`✅ Backend listening on http://localhost:${PORT}`);
 });
