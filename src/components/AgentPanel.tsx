@@ -4,8 +4,7 @@ import GdprModal from "./GdprModal";
 import ContactConfirm from "./ContactConfirm";
 import SolutionModal from "./SolutionModal";
 import VoiceAgentDisplay from "./VoiceAgentDisplay";
-import { EviWebAudioPlayer } from "@/utils/eviPlayer";
-import { useConversation } from "@elevenlabs/react";
+import { useRealtimeAgent } from "@/hooks/useRealtimeAgent";
 import { toast } from "@/components/ui/sonner";
 import brainAI from '@/assets/BrainAI.png';
 function safeRandomUUID(): string {
@@ -91,14 +90,10 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   );
   const [micEnabled, setMicEnabled] = useState(false);
   const [muted, setMuted] = useState(false);
-  const mutedRef = useRef(false);
   const timer = useRef<NodeJS.Timeout>();
   const startAt = useRef(0);
   const transcriptRef = useRef<HTMLDivElement>(null);
-  const eviSocketRef = useRef<WebSocket | null>(null);
-  const eviPlayerRef = useRef<EviWebAudioPlayer | null>(null);
   const closingHandled = useRef(false);
-  const audioCtxRef = useRef<AudioContext | null>(null);
   const contactRef = useRef<ContactInfo | null>(null);
   const openContactResolver = useRef<
     ((data?: ContactInfo) => void) | null
@@ -109,9 +104,6 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     messagesRef.current = messages;
   }, [messages]);
 
-  useEffect(() => {
-    mutedRef.current = muted;
-  }, [muted]);
 
   useEffect(() => {
     const handler = () => setContactOpen(true);
@@ -119,64 +111,15 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     return () => window.removeEventListener("openContactModal", handler);
   }, []);
 
-  function playAudio(data: ArrayBuffer) {
-    if (mutedRef.current) return;
-    try {
-      const ctx =
-        audioCtxRef.current ??
-        new (
-          window.AudioContext ||
-          (
-            window as unknown as {
-              webkitAudioContext: typeof AudioContext;
-            }
-          ).webkitAudioContext
-        )({
-          sampleRate: 48_000,
-        });
-      audioCtxRef.current = ctx;
-      if (!(data instanceof ArrayBuffer)) return;
-      ctx
-        .decodeAudioData(data.slice(0))
-        .then((buf) => {
-          const src = ctx.createBufferSource();
-          src.buffer = buf;
-          src.connect(ctx.destination);
-          src.start();
-        })
-        .catch((err) => {
-          console.warn("[decodeAudioError]", err);
-        });
-    } catch (err) {
-      console.error("[playAudio failed]", err);
-    }
-  }
 
-  const onAudio = (packet: unknown) => {
-    if (mode === "chat") return;
-    let buf: ArrayBuffer | null = null;
-    if (packet instanceof ArrayBuffer) {
-      buf = packet;
-    } else if (
-      typeof packet === "object" &&
-      packet !== null &&
-      "audio" in packet &&
-      typeof (packet as { audio: unknown }).audio === "string"
-    ) {
-      const str = atob((packet as { audio: string }).audio);
-      const arr = new Uint8Array(str.length);
-      for (let i = 0; i < str.length; i++) arr[i] = str.charCodeAt(i);
-      buf = arr.buffer;
-    }
-    if (buf) {
-      addDevLog("onAudio", `${buf.byteLength}B`);
-      playAudio(buf);
-    } else {
-      addDevLog("onAudio", "⏭️ prazan paket");
-    }
-  };
-
-  const { startSession, sendUserMessage, sendUserActivity } = useConversation({
+  const {
+    startSession,
+    stopSession,
+    sendUserMessage,
+    sendUserActivity,
+    mute,
+    unmute,
+  } = useRealtimeAgent({
     onMessage: async (m) => {
       setInterim(null);
       setPhase((p) => (p === "intro" && m.source === "user" ? "collect" : p));
@@ -209,37 +152,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
         console.error("Agent API request failed", err);
       }
     },
-    onDebug: (d) => {
-      addDevLog("debug", d);
-      if (d.type === "tentative_agent_response" && d.response) {
-        setInterim({
-          role: "assistant",
-          text: d.response,
-          time: new Date().toLocaleTimeString(),
-        });
-      }
-      if (d.type === "tentative_user_transcript" && d.response) {
-        setInterim({
-          role: "user",
-          text: d.response,
-          time: new Date().toLocaleTimeString(),
-        });
-      }
-    },
-    onAudio,
     onConnect: () => setPhase("collect"),
-    onDisconnect: () => {
-      setActiveSpeaker(null);
-    },
-    onError: (e) => console.error("[conversation-error]", e),
-    clientTools: {
-      openContactConfirm: () => {
-        return new Promise<ContactInfo | undefined>((resolve) => {
-          openContactResolver.current = resolve;
-          setContactOpen(true);
-        }) as unknown as Promise<string | number | void>;
-      },
-    },
+    onError: (e) => console.error("[realtime-error]", e),
   });
 
   async function finalize() {
@@ -249,7 +163,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       .map((m) => `${m.role === "user" ? "User" : "Agent"}: ${m.text}`)
       .join("\n");
     try {
-      const sumRes = await fetch("/api/elevenlabs/summary", {
+      const sumRes = await fetch("/api/summary", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -284,7 +198,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
       }
       const solutionText = `${sol.solutionText}\n${sol.cta}`;
       if (contactRef.current) {
-        await fetch("/api/elevenlabs/sendEmail", {
+        await fetch("/api/sendEmail", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -439,49 +353,11 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   }, []);
 
   useEffect(() => {
-    return () => {
-      audioCtxRef.current?.close?.();
-    };
-  }, []);
-
-  useEffect(() => {
     if (phase === "closing" && !contactSubmitted) {
       setContactOpen(true);
     }
   }, [phase, contactSubmitted]);
 
-  useEffect(() => {
-    if (phase !== "collect") return;
-    const player = new EviWebAudioPlayer();
-    eviPlayerRef.current = player;
-    const wsUrl =
-      (window.location.protocol === "https:" ? "wss://" : "ws://") +
-      window.location.host +
-      "/api/evi";
-    const ws = new WebSocket(wsUrl);
-    eviSocketRef.current = ws;
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data as string);
-        if (data.audio_output?.data && !mutedRef.current) {
-          setActiveSpeaker("agent");
-          player.enqueueBase64(data.audio_output.data);
-        }
-        if (data.event === "user_interruption") {
-          player.stop();
-        }
-      } catch (err) {
-        console.error("Failed to parse EVI message", err);
-      }
-    };
-    ws.onclose = () => {
-      player.stop();
-    };
-    return () => {
-      ws.close();
-      player.stop();
-    };
-  }, [phase]);
 
   async function startVoice() {
     if (!consentGiven) {
@@ -508,11 +384,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
     setPhase("intro");
     startAt.current = Date.now();
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      await startSession({
-        agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
-        connectionType: "websocket",
-      });
+      await startSession();
       setSessionActive(true);
       timer.current = setTimeout(() => {
         setPhase("closing");
@@ -526,8 +398,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   }
 
   function stopVoice() {
-    eviSocketRef.current?.close();
-    eviPlayerRef.current?.stop?.();
+    stopSession();
     setSessionActive(false);
     setActiveSpeaker(null);
     setPhase("idle");
@@ -605,10 +476,7 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
 
   async function ensureSession() {
     if (!sessionActive && mode === "voice") {
-      await startSession({
-        agentId: import.meta.env.VITE_ELEVEN_AGENT_ID,
-        connectionType: "websocket",
-      });
+      await startSession();
       setSessionActive(true);
     }
   }
@@ -625,7 +493,8 @@ const AgentPanel = ({ language }: AgentPanelProps) => {
   const handleMuteToggle = () =>
     setMuted((p) => {
       const next = !p;
-      if (next) eviPlayerRef.current?.stop?.();
+      if (next) mute();
+      else unmute();
       return next;
     });
   const handleEndChat = () => {
